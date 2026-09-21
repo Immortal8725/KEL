@@ -8,7 +8,9 @@ import { evidenceSvg } from "@/lib/evidence";
 import { postJson, usePlatform } from "@/lib/use-platform";
 import { useSession } from "@/lib/use-session";
 import { enqueue, flushOutbox, pendingCount } from "@/lib/offline";
-import type { MasterIncident } from "@/lib/types";
+import { TrackLiveMap, navigateUrl, technicianNameForCrew } from "@/components/track-live-map";
+import { distanceMetres, formatKm, etaMinutes } from "@/lib/geo";
+import type { FieldCrew, MasterIncident } from "@/lib/types";
 
 export function TechnicianApp() {
   const { persona } = useSession();
@@ -93,12 +95,25 @@ export function TechnicianApp() {
               Control room assigned this job to you
             </div>
             <div className="text-muted-foreground mt-0.5">
-              {assigned.address}. The resident is tracking {crew?.callsign ?? "your van"}{" "}
-              live on their map — drive, then log On Site.
+              Drive to {assigned.address}. The resident sees this same van on their map.
             </div>
           </div>
+          {crew ? (
+            <div className="mt-3">
+              <TrackLiveMap
+                incident={assigned}
+                crew={crew}
+                technicianName={technicianNameForCrew(
+                  crew,
+                  snapshot?.users ?? [],
+                )}
+                perspective="technician"
+              />
+            </div>
+          ) : null}
           <JobCard
             incident={assigned}
+            crew={crew}
             notes={notes}
             serial={serial}
             signature={signature}
@@ -144,8 +159,23 @@ export function TechnicianApp() {
                 <div className="font-mono text-[11px]">{incident.reference}</div>
                 <div className="text-sm font-medium">{incident.address}</div>
                 <div className="text-muted-foreground text-xs">
-                  {incident.affectedHouseholds} hh · tap to accept and go En Route
+                  {incident.affectedHouseholds} hh
+                  {crew
+                    ? ` · ${formatKm(distanceMetres(crew.location, incident.location))} · ${etaMinutes(distanceMetres(crew.location, incident.location))} min`
+                    : ""}{" "}
+                  · tap to take this job
                 </div>
+                {crew ? (
+                  <a
+                    href={navigateUrl(crew.location, incident.location)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary mt-2 inline-block text-xs underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Preview route to this fault
+                  </a>
+                ) : null}
               </button>
             ))
           )}
@@ -158,6 +188,7 @@ export function TechnicianApp() {
 
 function JobCard({
   incident,
+  crew,
   notes,
   serial,
   signature,
@@ -168,6 +199,7 @@ function JobCard({
   onComplete,
 }: {
   incident: MasterIncident;
+  crew?: FieldCrew;
   notes: string;
   serial: string;
   signature: string | null;
@@ -177,21 +209,26 @@ function JobCard({
   onOnSite: () => void;
   onComplete: () => void;
 }) {
-  const maps = `https://www.google.com/maps/dir/?api=1&destination=${incident.location.lat},${incident.location.lon}`;
+  const maps = crew
+    ? navigateUrl(crew.location, incident.location)
+    : `https://www.google.com/maps/dir/?api=1&destination=${incident.location.lat},${incident.location.lon}&travelmode=driving`;
   return (
     <div className="mt-4 rounded-xl border border-border bg-card p-4">
       <div className="font-mono text-xs">{incident.reference}</div>
       <div className="mt-1 text-base font-semibold">{incident.address}</div>
       <div className="text-muted-foreground mt-1 text-xs">
         {incident.affectedHouseholds} households · {incident.status.replaceAll("_", " ")}
+        {crew
+          ? ` · ${formatKm(distanceMetres(crew.location, incident.location))} from your van`
+          : ""}
       </div>
       <a
         href={maps}
         target="_blank"
         rel="noreferrer"
-        className="text-primary mt-3 inline-block text-xs underline"
+        className="text-primary mt-2 inline-block text-xs underline"
       >
-        Open turn-by-turn navigation
+        Open driving directions
       </a>
       <div className="mt-4 flex flex-col gap-2">
         <Button onClick={onOnSite} disabled={incident.status === "on_site"}>
