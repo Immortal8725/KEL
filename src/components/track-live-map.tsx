@@ -42,9 +42,15 @@ export function TrackLiveMap({
 
     async function mount() {
       const L = await import("leaflet");
-      if (cancelled || !el || mapRef.current) return;
+      if (cancelled || !el) return;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      delete (el as HTMLDivElement & { _leaflet_id?: number })._leaflet_id;
+
       const map = L.map(el, {
-        zoomControl: false,
+        zoomControl: true,
         attributionControl: true,
       }).setView([incident.location.lat, incident.location.lon], 14);
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -60,8 +66,13 @@ export function TrackLiveMap({
     }
 
     mount();
+    const ro = new ResizeObserver(() => mapRef.current?.invalidateSize());
+    ro.observe(el);
     return () => {
       cancelled = true;
+      ro.disconnect();
+      mapRef.current?.remove();
+      mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -138,18 +149,15 @@ export function TrackLiveMap({
     perspective,
   ]);
 
-  useEffect(() => {
-    return () => {
-      mapRef.current?.remove();
-      mapRef.current = null;
-    };
-  }, []);
-
   const maps = navigateUrl(crew.location, incident.location);
 
   return (
     <div className="overflow-hidden rounded-xl border border-border">
-      <div ref={elRef} className="h-56 w-full md:h-72" />
+      <div
+        ref={elRef}
+        className="h-64 w-full md:h-80"
+        style={{ minHeight: 256 }}
+      />
       <div className="bg-card flex items-start justify-between gap-3 px-3 py-2">
         <div>
           <div className="text-[10px] tracking-wide text-primary uppercase">

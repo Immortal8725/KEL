@@ -16,6 +16,7 @@ import {
 } from "@/lib/format";
 import { usePlatform, postJson } from "@/lib/use-platform";
 import { recommendCrews } from "@/lib/engines/dispatch";
+import { TrackLiveMap } from "@/components/track-live-map";
 import type {
   DispatchRecommendation,
   FieldCrew,
@@ -508,9 +509,17 @@ function DetailPane({
             power) before this ticket closes.
           </div>
         ) : assigned ? (
-          <div className="text-primary mt-2">
-            {assignedName} ({assigned.callsign}) has this job. The resident is tracking
-            the van live on their map.
+          <div className="mt-3 space-y-2">
+            <div className="text-primary">
+              {assignedName} ({assigned.callsign}) has this job. The resident is tracking
+              the van live on their map.
+            </div>
+            <TrackLiveMap
+              incident={incident}
+              crew={assigned}
+              technicianName={assignedName ?? assigned.callsign}
+              perspective="resident"
+            />
           </div>
         ) : null}
         {canAssign ? (

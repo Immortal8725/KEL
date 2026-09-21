@@ -68,7 +68,11 @@ export function CommandMap({
     async function mount() {
       const L = await import("leaflet");
       if (cancelled || !el) return;
-      if (mapRef.current) return;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      delete (el as HTMLDivElement & { _leaflet_id?: number })._leaflet_id;
 
       const map = L.map(el, {
         zoomControl: false,
@@ -90,8 +94,13 @@ export function CommandMap({
     }
 
     mount();
+    const ro = new ResizeObserver(() => mapRef.current?.invalidateSize());
+    ro.observe(el);
     return () => {
       cancelled = true;
+      ro.disconnect();
+      mapRef.current?.remove();
+      mapRef.current = null;
     };
     // Initial mount only — redraw is handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -184,13 +193,6 @@ export function CommandMap({
       active = false;
     };
   }, [signature, incidents, investigations, crews, selectedId, mapReady]);
-
-  useEffect(() => {
-    return () => {
-      mapRef.current?.remove();
-      mapRef.current = null;
-    };
-  }, []);
 
   return (
     <div

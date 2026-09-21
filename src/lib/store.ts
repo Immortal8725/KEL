@@ -935,13 +935,13 @@ class ElectroRaidStore {
   }
 }
 
-const globalForStore = globalThis as unknown as { __electroraid?: ElectroRaidStore };
+const globalForStore = globalThis as unknown as { __electroraid_v2?: ElectroRaidStore };
 
 export function getStore(): ElectroRaidStore {
-  if (!globalForStore.__electroraid) {
-    globalForStore.__electroraid = new ElectroRaidStore();
+  if (!globalForStore.__electroraid_v2) {
+    globalForStore.__electroraid_v2 = new ElectroRaidStore();
   }
-  return globalForStore.__electroraid;
+  return globalForStore.__electroraid_v2;
 }
 
 export { hoursAgo };
