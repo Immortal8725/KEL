@@ -79,7 +79,7 @@ export function CommandMap({
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
-        className: "gridpulse-basemap",
+        className: "electroraid-basemap",
       }).addTo(map);
 
       L.control.zoom({ position: "bottomright" }).addTo(map);

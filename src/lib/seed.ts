@@ -1,7 +1,6 @@
 /**
- * Baseline City of Tshwane ops floor — used by the prototype store and the
- * hackathon demo reset. Coordinates are real suburbs; account numbers and
- * households are representative, not live CIS records.
+ * Baseline City of Tshwane ops floor. Coordinates are real suburbs; account
+ * numbers and households are representative, not live CIS records.
  */
 
 import { appendAudit } from "./engines/audit";
@@ -34,7 +33,7 @@ export function seedPlatform(): PlatformSnapshot {
       id: "usr_system",
       employeeNo: "SYS-000",
       fullName: "ElectroRaid Engine",
-      email: "engine@gridpulse.tshwane.gov.za",
+      email: "engine@electroraid.tshwane.gov.za",
       phone: null,
       role: "system",
       isActive: true,
@@ -505,7 +504,7 @@ export function seedPlatform(): PlatformSnapshot {
       actorRole: "system",
       actionType: "PLATFORM_SEEDED",
       entityType: "platform",
-      entityId: "gridpulse",
+      entityId: "electroraid",
       payload: { city: "Tshwane", mode: "prototype" },
       occurredAt: daysAgo(3, T0),
     },

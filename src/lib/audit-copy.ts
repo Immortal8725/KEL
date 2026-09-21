@@ -60,7 +60,7 @@ export function auditStory(row: AuditLog): AuditStory {
   switch (row.actionType) {
     case "PLATFORM_SEEDED":
       return {
-        title: "Demo floor loaded",
+        title: "Ops floor loaded",
         detail: "Baseline City of Tshwane tickets, crews, and meters were loaded.",
         ticket: null,
         kind: "system",

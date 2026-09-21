@@ -1,7 +1,7 @@
 # Data Processing Agreement
 
 **Effective:** 21 September 2026  
-**Product:** ElectroRaid from GridPulse  
+**Product:** ElectroRaid  
 **Law:** Protection of Personal Information Act 4 of 2013 (POPIA) and, where relevant, the GDPR for any EU-based hosting.
 
 This DPA is a **template for a future production host**. The current prototype processes data only in memory on the machine that runs `next dev` / `next start`.
@@ -9,7 +9,7 @@ This DPA is a **template for a future production host**. The current prototype p
 ## 1. Parties
 
 - **Responsible party / Controller:** City of Tshwane (“City”).  
-- **Operator / Processor:** the organisation that hosts GridPulse in production (“Processor”).  
+- **Operator / Processor:** the organisation that hosts ElectroRaid in production (“Processor”).  
 - **Sub-processors:** listed in [Service Providers](SERVICE_PROVIDERS.md).
 
 Hackathon teammates running the repo locally are **not** appointed operators of the City.

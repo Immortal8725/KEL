@@ -1,7 +1,7 @@
 # Service Providers, Sub-processors, and Affiliates
 
 **Effective:** 21 September 2026  
-**Product:** ElectroRaid from GridPulse  
+**Product:** ElectroRaid  
 **Related:** [Data Processing Agreement](DATA_PROCESSING_AGREEMENT.md), [Privacy & Cookie Policy](../PRIVACY_POLICY.md)
 
 This list is what the **current prototype** actually talks to, plus who would appear in a City production build.
@@ -10,8 +10,8 @@ This list is what the **current prototype** actually talks to, plus who would ap
 
 | Party | Role | Data that may be seen | Location / notes |
 | --- | --- | --- | --- |
-| GridPulse Node process | Application + in-memory store | Full snapshot (users, tickets, GPS, audit) | The machine running `npm run dev` (port 43147) |
-| Browser | Persona session | `gridpulse.demo.session` in `localStorage` | User device |
+| ElectroRaid Node process | Application + in-memory store | Full snapshot (users, tickets, GPS, audit) | The machine running `npm run dev` (port 43147) |
+| Browser | Persona session | `electroraid.session` in `localStorage` | User device |
 | OpenStreetMap tile servers (`tile.openstreetmap.org`) | Basemap only | Client IP, tile XYZ | Community tiles — **no API key** in `command-map.tsx` |
 | Cursor / preview host (when used) | Temporary HTTPS front | Whatever the preview proxy forwards | See host’s own terms |
 
@@ -41,7 +41,7 @@ No affiliate receives demo data unless a human screenshares the pitch.
 
 ## 4. Production sub-processors (not contracted yet)
 
-If the City hosted GridPulse, typical additions would be listed here before go-live:
+If the City hosted ElectroRaid, typical additions would be listed here before go-live:
 
 | Candidate | Purpose | Data |
 | --- | --- | --- |

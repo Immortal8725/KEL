@@ -1,32 +1,30 @@
-# ElectroRaid from GridPulse — City of Tshwane
+# ElectroRaid — City of Tshwane
 
-**ElectroRaid** is the municipal outage and revenue-protection product. It is built **from GridPulse** — the spatial clustering, dispatch, Izinyoka, and audit engines in this repo.
+**ElectroRaid** is the municipal outage and revenue-protection platform for the City of Tshwane.
 
-Smart outage management and revenue protection for the City of Tshwane. Built as a working prototype for the Tshwane Varsity Hackathon.
+It sits between residents, municipal dispatchers, field technicians, and revenue-protection inspectors. Duplicate outage reports cluster in real time, prepaid meters that stop buying electricity while the feeder is still live are flagged (Izinyoka / meter bypass), the right crew is dispatched, and every action is written to an append-only audit chain. Residents track the assigned technician live on the map.
 
-The platform sits between residents, municipal dispatchers, field technicians, and revenue-protection inspectors. It clusters duplicate outage reports in real time, flags prepaid meters that stop buying electricity while the feeder is still live (Izinyoka / meter bypass), dispatches the right crew, and writes every action to an append-only audit chain.
-
-## Fast start
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:43147](http://localhost:43147). You land on a **fake login**. Password for every demo account is `gridpulse`, or tap a persona card:
+Open [http://localhost:43147](http://localhost:43147) and sign in as one of the seeded staff accounts (password `electroraid`):
 
-| Persona | Role | Lands on |
+| Person | Role | Lands on |
 | --- | --- | --- |
-| Sibusiso Mabena | Resident | `/resident` — report a fault, **live-track the technician like Bolt**, confirm restore |
-| Thandiwe Nkosi | Dispatcher | `/ops` — tap **Assign {callsign}** on the resident’s ticket; job lands on that technician immediately |
+| Sibusiso Mabena | Resident | `/resident` — report a fault, live-track the technician, confirm restore |
+| Thandiwe Nkosi | Dispatcher | `/ops` — assign a named technician; the job lands on that handset immediately |
 | Sipho Dlamini | Field technician | `/tech` — assigned jobs appear the moment control room dispatches you |
-| Nomsa Khumalo | Revenue investigator | `/inspect` — zero-kWh audits **and Repair QA** on technician work |
+| Nomsa Khumalo | Revenue investigator | `/inspect` — zero-kWh audits and repair QA |
 
-Use **Switch user** in the sidebar to hop personas without a real IdP.
+Use **Switch user** in the sidebar to change role.
 
 ## What is running
 
-This prototype is a Next.js app with TypeScript engines that mirror a production PostgreSQL + PostGIS design.
+Next.js with TypeScript engines that mirror a production PostgreSQL + PostGIS design.
 
 | Layer | Where |
 | --- | --- |
@@ -34,7 +32,7 @@ This prototype is a Next.js app with TypeScript engines that mirror a production
 | Spatial dedup, priority, anomaly, dispatch, audit, ROI | `src/lib/engines/` |
 | In-memory store (hot-reload safe) | `src/lib/store.ts` |
 | REST + SSE | `src/app/api/` |
-| Command map, demo, field PWA, audit, analytics | `src/app/` and `src/components/` |
+| Command map, field PWA, audit, analytics | `src/app/` and `src/components/` |
 
 Production would swap the store for Postgres. The engines stay the same — they already implement the SQL in `db/schema.sql` (`ST_DWithin` 500 m / 2 h, `compute_priority_score`, `recommend_crew`, `zero_consumption_candidates`).
 
@@ -54,11 +52,10 @@ Flag an **active** prepaid meter when it has purchased **0 kWh for ≥ 60 days**
 
 | User | Interface | Responsibility |
 | --- | --- | --- |
-| Resident | `/resident` PWA / WhatsApp-style | Choose what to report from a dropdown (Other if it is not listed), send anonymous tips the same way, get notified when the technician logs on site and when they finish, then Confirm restored or Still no power |
-| Dispatcher | `/ops` admin portal | Heatmap with a labelled map key, deduplicated master tickets, vending anomalies, assign crews, wait for resident confirm |
-| Field technician | `/tech` PWA | Physical repairs, live GPS status, closure proof (notes, serial, signature) |
-| Revenue investigator | `/inspect` audit PWA | Zero-consumption audits, Izinyoka evidence, digital tamper fines, **quality assurance on the technician's repair** |
-- Dispatch picks the nearest available unit of the right specialisation, penalised by current queue size
+| Resident | `/resident` | Report a fault or anonymous tip, track the van live, confirm restore |
+| Dispatcher | `/ops` | Live map, clustered tickets, assign crews |
+| Field technician | `/tech` | Physical repairs, live GPS, closure proof |
+| Revenue investigator | `/inspect` | Zero-consumption audits, Izinyoka evidence, repair QA |
 
 ## Field PWA
 
@@ -72,17 +69,16 @@ Flag an **active** prepaid meter when it has purchased **0 kWh for ≥ 60 days**
 | GET | `/api/events` | Server-sent events (live map / dashboard) |
 | POST | `/api/reports` | Ingest a resident report or anonymous tip |
 | POST | `/api/anomalies/scan` | Run the zero-consumption worker |
-| POST | `/api/dispatch` | Assign nearest matching crew |
-| POST | `/api/demo/step` | Scripted hackathon acts |
-| GET | `/api/audit` | Immutable ledger (shown in `/audit` as a plain-language activity diary; seals stay hidden until you open them) |
+| POST | `/api/dispatch` | Assign a matching crew |
+| GET | `/api/audit` | Immutable ledger |
 | GET | `/api/analytics` | Municipal ROI |
 | POST | `/api/field/action` | On-site, evidence, fine, sign-off, resident confirm/dispute, inspector QA |
 
-No database or API keys are required to run the prototype. Seeded geography uses real Tshwane suburbs (Mamelodi, Atteridgeville, Soshanguve, Hatfield, Pretoria CBD); account numbers are representative, not live CIS records.
+Seeded geography uses real Tshwane suburbs (Mamelodi, Atteridgeville, Soshanguve, Hatfield, Pretoria CBD); account numbers are representative, not live CIS records.
 
 ## Users in the code
 
-Every seeded person, login card, crew van, and role guard is listed in **[CODE.md](CODE.md)**.
+Every seeded person, login, crew van, and role guard is listed in **[CODE.md](CODE.md)**.
 
 ## Legal
 

@@ -1,10 +1,10 @@
 -- =============================================================================
--- GridPulse — City of Tshwane
+-- ElectroRaid — City of Tshwane
 -- Smart Outage Management & Revenue Protection
 -- PostgreSQL 16 + PostGIS 3.4 schema
 --
--- This file is the production contract. The Next.js prototype mirrors these
--- structures in an in-memory store so the hackathon demo can run without a
+-- This file is the production contract. The Next.js app mirrors these
+-- structures in an in-memory store so the platform can run without a
 -- database, while remaining a 1:1 mapping of tables, constraints, and GIS
 -- functions.
 -- =============================================================================
@@ -442,6 +442,6 @@ WHERE m.status = 'active'
   AND COALESCE(v.last_purchase_at, m.installed_at) <= NOW() - INTERVAL '60 days';
 
 -- Application role: write path for ops, read-only on the audit table.
--- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO gridpulse_app;
--- REVOKE UPDATE, DELETE ON immutable_audit_logs FROM gridpulse_app;
--- GRANT INSERT, SELECT ON immutable_audit_logs TO gridpulse_app;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO electroraid_app;
+-- REVOKE UPDATE, DELETE ON immutable_audit_logs FROM electroraid_app;
+-- GRANT INSERT, SELECT ON immutable_audit_logs TO electroraid_app;

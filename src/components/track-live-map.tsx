@@ -49,7 +49,7 @@ export function TrackLiveMap({
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
-        className: "gridpulse-basemap",
+        className: "electroraid-basemap",
       }).addTo(map);
       layersRef.current = L.layerGroup().addTo(map);
       mapRef.current = map;

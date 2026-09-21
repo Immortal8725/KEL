@@ -1,4 +1,4 @@
-const DB_NAME = "gridpulse-field";
+const DB_NAME = "electroraid-field";
 const STORE = "outbox";
 
 function openDb(): Promise<IDBDatabase> {

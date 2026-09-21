@@ -1,4 +1,4 @@
-# Legal pack — ElectroRaid from GridPulse
+# Legal pack — ElectroRaid
 
 | Document | File |
 | --- | --- |

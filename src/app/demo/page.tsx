@@ -1,10 +1,5 @@
-import { AppShell } from "@/components/app-shell";
-import { DemoStage } from "@/components/demo-stage";
+import { redirect } from "next/navigation";
 
 export default function DemoPage() {
-  return (
-    <AppShell>
-      <DemoStage />
-    </AppShell>
-  );
+  redirect("/ops");
 }

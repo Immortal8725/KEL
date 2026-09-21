@@ -1,6 +1,6 @@
 import type { UserRole } from "./types";
 
-export const DEMO_PASSWORD = "gridpulse";
+export const SIGNIN_PASSWORD = "electroraid";
 
 export interface DemoPersona {
   id: string;
@@ -67,7 +67,7 @@ export const PERSONAS: DemoPersona[] = [
   },
 ];
 
-export const SESSION_KEY = "gridpulse.demo.session";
+export const SESSION_KEY = "electroraid.session";
 
 export function personaById(id: string): DemoPersona | undefined {
   return PERSONAS.find((p) => p.id === id);
@@ -97,7 +97,6 @@ export function navForRole(role: UserRole): NavItem[] {
     default:
       return [
         { href: "/ops", label: "Command" },
-        { href: "/demo", label: "Demo" },
         { href: "/audit", label: "Audit" },
         { href: "/analytics", label: "ROI" },
       ];

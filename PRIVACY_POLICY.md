@@ -1,10 +1,10 @@
 # Privacy & Cookie Policy
 
-**Product:** ElectroRaid from GridPulse (City of Tshwane outage and revenue-protection prototype)  
+**Product:** ElectroRaid (City of Tshwane outage and revenue-protection prototype)  
 **Effective:** 21 September 2026  
 **Applies to:** `PRIVACY_POLICY.md` — website, resident PWA, dispatcher portal, field apps, and APIs in this repository.
 
-This policy explains what ElectroRaid from GridPulse collects, why, and how long it stays. It is written for a **hackathon prototype**. Seeded names, phone numbers, prepaid accounts, and GPS points are **representative demo data**, not live City of Tshwane CIS records.
+This policy explains what ElectroRaid collects, why, and how long it stays. It is written for a **hackathon prototype**. Seeded names, phone numbers, prepaid accounts, and GPS points are **representative demo data**, not live City of Tshwane CIS records.
 
 Related documents: [Terms of Use](TERMS_OF_USE.md), [Visitor Privacy](legal/VISITOR_PRIVACY.md), [Event Privacy](legal/EVENT_PRIVACY.md), [Data Processing Agreement](legal/DATA_PROCESSING_AGREEMENT.md).
 
@@ -12,7 +12,7 @@ Related documents: [Terms of Use](TERMS_OF_USE.md), [Visitor Privacy](legal/VISI
 
 The **responsible party** (POPIA) / controller for a production deployment would be the **City of Tshwane**, Energy and Electricity / Revenue Protection.
 
-This repository is a prototype. There is no production tenant, no real identity provider, and no persistent database. State lives in the Node.js process (`src/lib/store.ts`) and a browser `localStorage` key `gridpulse.demo.session`.
+This repository is a prototype. There is no production tenant, no real identity provider, and no persistent database. State lives in the Node.js process (`src/lib/store.ts`) and a browser `localStorage` key `electroraid.session`.
 
 Contact for this demo: `cfo.energy@tshwane.gov.za` (seeded executive mailbox — not a monitored live inbox).
 
@@ -36,7 +36,7 @@ ElectroRaid does **not** set advertising or analytics cookies.
 
 | Name | Type | Purpose | Duration |
 | --- | --- | --- | --- |
-| `gridpulse.demo.session` | Browser `localStorage` (not a cookie) | Remembers which demo persona you picked | Until you tap **Switch user** or clear site data |
+| `electroraid.session` | Browser `localStorage` (not a cookie) | Remembers who is signed in | Until you tap **Switch user** or clear site data |
 | Next.js / dev-server cookies | Technical, if the host sets them | Keep the preview session on the same origin | Session |
 
 No third-party ad pixels, no Google Analytics, no social trackers ship in this repo.
@@ -76,7 +76,7 @@ You may ask to see, correct, or delete personal information we hold, or object t
 
 ## 9. Security
 
-Field actions and reports append to a SHA-256 hash chain (`src/lib/engines/audit.ts`). Rows are not updated or deleted in the store. The demo login password `gridpulse` is **not** a production secret. Do not put live resident data into this app.
+Field actions and reports append to a SHA-256 hash chain (`src/lib/engines/audit.ts`). Rows are not updated or deleted in the store. The demo login password `electroraid` is **not** a production secret. Do not put live resident data into this app.
 
 ## 10. Children
 

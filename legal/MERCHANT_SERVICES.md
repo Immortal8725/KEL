@@ -1,15 +1,15 @@
 # Merchant Services Agreement
 
 **Effective:** 21 September 2026  
-**Product:** ElectroRaid from GridPulse  
+**Product:** ElectroRaid  
 **Status:** Demonstration only — no merchant acquirer is connected.
 
-This document describes how **money would** move if the City took GridPulse to production, and what the **prototype actually does**.
+This document describes how **money would** move if the City took ElectroRaid to production, and what the **prototype actually does**.
 
 ## 1. Parties (intended production)
 
 - **Merchant:** City of Tshwane (prepaid electricity and tamper recoveries).  
-- **Platform:** GridPulse (records the event; does not hold card data).  
+- **Platform:** ElectroRaid (records the event; does not hold card data).  
 - **Acquirer / vending vendors:** existing municipal prepaid vendors (referenced in seed as `COT-VEND-441`).  
 - **Payer:** the account holder, only in a real deployment.
 
@@ -30,11 +30,11 @@ UI strings such as “Issue tamper fine · R…” do **not** create a receivabl
 
 ## 3. Production merchant rules (if adopted)
 
-1. GridPulse would **record** a fine or back-bill id and pass it to the City’s billing system.  
+1. ElectroRaid would **record** a fine or back-bill id and pass it to the City’s billing system.  
 2. Card or EFT collection would stay with the City’s existing merchant / cashier channels.  
-3. Prepaid token sales stay with licensed vending agents. GridPulse only **reads** last-purchase timestamps for the 60-day rule.  
+3. Prepaid token sales stay with licensed vending agents. ElectroRaid only **reads** last-purchase timestamps for the 60-day rule.  
 4. Refunds and reversals follow the City credit-control policy and the [Dispute Policy](DISPUTE_POLICY.md).  
-5. Settlement reports would be daily; GridPulse would not hold client funds.
+5. Settlement reports would be daily; ElectroRaid would not hold client funds.
 
 ## 4. Fees
 

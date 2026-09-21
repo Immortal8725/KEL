@@ -1,7 +1,7 @@
 # Dispute Policy
 
 **Effective:** 21 September 2026  
-**Product:** ElectroRaid from GridPulse
+**Product:** ElectroRaid
 
 This policy explains how to raise a complaint about the prototype, a demo ticket, a simulated fine, or personal information. It does not replace SAPS, NERSA, or the City’s official credit-control by-laws.
 
@@ -14,15 +14,15 @@ This policy explains how to raise a complaint about the prototype, a demo ticket
 | Repair quality | Joint left unsafe | Inspector **Repair QA** (1–5 + notes) → `INSPECTOR_QA_ON_REPAIR` |
 | Tip / flag | Wrong house flagged | Ask dispatch to close the investigation `closed_no_finding` |
 | Privacy | You typed a real number into Other | Ask for a store reset; see [Visitor Privacy](VISITOR_PRIVACY.md) |
-| Demo account | Someone used your judging laptop | Switch user / clear `gridpulse.demo.session` |
+| Demo account | Someone used your judging laptop | Switch user / clear `electroraid.session` |
 
 ## 2. How to raise it (prototype)
 
 1. Use the in-app control if one exists (Still no power, QA, investigation close).  
-2. If you are at the hackathon, tell the GridPulse team or the information desk.  
+2. If you are at the hackathon, tell the ElectroRaid team or the information desk.  
 3. If the matter is a live City account, **stop using this demo** and use the official City channels. This app cannot reverse a real bill.
 
-## 3. How to raise it (if GridPulse were in production)
+## 3. How to raise it (if ElectroRaid were in production)
 
 1. Write to the City information officer / revenue-protection desk with the ticket reference (`TSH-OUT-…` or `TSH-RP-…`).  
 2. The City should acknowledge within a reasonable time and log the complaint on the same audit chain (new append-only row — never an edit of the old one).  

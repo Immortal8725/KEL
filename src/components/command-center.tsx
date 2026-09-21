@@ -2,7 +2,6 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { CommandMap } from "@/components/command-map";
-import { DemoRail } from "@/components/demo-rail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,7 +27,6 @@ import type {
 export function CommandCenter() {
   const { snapshot, roi, liveEvent, error } = usePlatform();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [demoOpen, setDemoOpen] = useState(true);
 
   const selectedIncident = snapshot?.incidents.find((i) => i.id === selectedId);
   const selectedInv = snapshot?.investigations.find((i) => i.id === selectedId);
@@ -92,19 +90,12 @@ export function CommandCenter() {
       </section>
 
       <aside className="flex min-h-0 flex-col border-t border-border lg:border-t-0 lg:border-l">
-        <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-          <div>
-            <div className="text-xs font-medium">Work queue</div>
-            <div className="text-muted-foreground text-[11px]">
-              Coloured dots match the map. 500 m / 2 h nearby reports merge into one ticket.
-            </div>
+        <div className="border-b border-border px-3 py-2">
+          <div className="text-xs font-medium">Work queue</div>
+          <div className="text-muted-foreground text-[11px]">
+            Coloured dots match the map. 500 m / 2 h nearby reports merge into one ticket.
           </div>
-          <Button size="sm" variant="outline" onClick={() => setDemoOpen((v) => !v)}>
-            {demoOpen ? "Hide demo" : "Hackathon demo"}
-          </Button>
         </div>
-
-        {demoOpen ? <DemoRail /> : null}
 
         <QueueKey />
 

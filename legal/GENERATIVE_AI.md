@@ -1,7 +1,7 @@
 # Generative AI Notice
 
 **Effective:** 21 September 2026  
-**Product:** ElectroRaid from GridPulse
+**Product:** ElectroRaid
 
 ## 1. What this product does not do
 
@@ -30,7 +30,7 @@ Dispatchers still assign (or accept a recommendation). Inspectors still tick sea
 
 ## 4. If a future version adds a model
 
-We would update this notice and the Privacy Policy to say: which vendor, which fields leave South Africa, whether prompts include personal information, and how to opt out. Until then, treat ElectroRaid from GridPulse as **rules + GPS + an audit log**, not as generative AI.
+We would update this notice and the Privacy Policy to say: which vendor, which fields leave South Africa, whether prompts include personal information, and how to opt out. Until then, treat ElectroRaid as **rules + GPS + an audit log**, not as generative AI.
 
 ## 5. Acceptable use of AI around the demo
 

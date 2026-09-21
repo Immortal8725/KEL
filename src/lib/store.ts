@@ -1,8 +1,8 @@
 /**
- * In-memory GridPulse store.
+ * In-memory ElectroRaid store.
  *
  * Mirrors the PostGIS schema. The singleton is hung off `globalThis` so
- * Next.js hot-reload does not wipe the control-room state mid-demo.
+ * Next.js hot-reload does not wipe the control-room state.
  *
  * Production swap: replace method bodies with SQL against db/schema.sql.
  * The engines (spatial, anomaly, dispatch, audit, roi) stay unchanged.
@@ -48,7 +48,7 @@ import { DEFAULT_WEIGHTS } from "./types";
 
 const MAX_EVENTS = 80;
 
-class GridPulseStore {
+class ElectroRaidStore {
   users: User[] = [];
   crews: FieldCrew[] = [];
   feeders: PlatformSnapshot["feeders"] = [];
@@ -935,13 +935,13 @@ class GridPulseStore {
   }
 }
 
-const globalForStore = globalThis as unknown as { __gridpulse?: GridPulseStore };
+const globalForStore = globalThis as unknown as { __electroraid?: ElectroRaidStore };
 
-export function getStore(): GridPulseStore {
-  if (!globalForStore.__gridpulse) {
-    globalForStore.__gridpulse = new GridPulseStore();
+export function getStore(): ElectroRaidStore {
+  if (!globalForStore.__electroraid) {
+    globalForStore.__electroraid = new ElectroRaidStore();
   }
-  return globalForStore.__gridpulse;
+  return globalForStore.__electroraid;
 }
 
 export { hoursAgo };

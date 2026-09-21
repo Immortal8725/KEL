@@ -24,7 +24,7 @@ export function AnalyticsView() {
         Office of the CFO
       </div>
       <h1 className="font-heading text-2xl font-semibold">
-        Commercial analytics · ElectroRaid from GridPulse
+        Commercial analytics · ElectroRaid
       </h1>
       <p className="text-muted-foreground mt-1 max-w-2xl text-sm">
         Direct revenue recovered from tampering cases, plus operational savings

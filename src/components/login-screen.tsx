@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PERSONAS, DEMO_PASSWORD, useSession } from "@/lib/use-session";
+import { PERSONAS, useSession } from "@/lib/use-session";
 import { goReplace } from "@/lib/hard-nav";
-import { PRODUCT_FULL, PRODUCT_NAME, PRODUCT_BYLINE } from "@/lib/brand";
+import { PRODUCT_NAME, PRODUCT_BYLINE } from "@/lib/brand";
 
 export function LoginScreen() {
   const { login, loginWithPassword } = useSession();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   function enter(id: string) {
@@ -22,7 +22,7 @@ export function LoginScreen() {
     e.preventDefault();
     const persona = loginWithPassword(email, password);
     if (!persona) {
-      setError("Unknown demo account. Password for every persona is gridpulse.");
+      setError("Email or password is incorrect.");
       return;
     }
     goReplace(persona.home);
@@ -32,16 +32,14 @@ export function LoginScreen() {
     <div className="min-h-dvh px-4 py-10">
       <div className="mx-auto max-w-5xl">
         <div className="text-[10px] tracking-[0.24em] text-primary uppercase">
-          City of Tshwane · {PRODUCT_NAME} {PRODUCT_BYLINE}
+          City of Tshwane · {PRODUCT_BYLINE}
         </div>
         <h1 className="font-heading mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
           Sign in to {PRODUCT_NAME}
         </h1>
         <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
-          {PRODUCT_FULL} — fake municipal login. Pick a persona. Each role
-          opens a different product: resident channel, control-room ops,
-          technician PWA, or revenue-protection audit kit. Password for typed
-          login is <code className="text-foreground">gridpulse</code>.
+          Outage reporting, live technician tracking, control-room dispatch, and
+          revenue protection — choose your workspace.
         </p>
 
         <div className="mt-8 grid gap-3 md:grid-cols-2">
@@ -63,7 +61,7 @@ export function LoginScreen() {
                   <div className="text-muted-foreground text-xs">{p.title}</div>
                 </div>
                 <span className="bg-primary/15 text-primary rounded-full px-2 py-0.5 text-[10px]">
-                  Enter
+                  Sign in
                 </span>
               </div>
               <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
@@ -90,17 +88,20 @@ export function LoginScreen() {
           onSubmit={submitPassword}
           className="mt-8 max-w-md rounded-xl border border-border p-4"
         >
-          <div className="text-xs font-medium">Or type a demo account</div>
+          <div className="text-xs font-medium">Sign in with email</div>
           <div className="mt-3 space-y-2">
             <Input
-              placeholder="email"
+              placeholder="Work email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
             />
             <Input
               type="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
             />
             <Button type="submit" className="w-full">
               Sign in

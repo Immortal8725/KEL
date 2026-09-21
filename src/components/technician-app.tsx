@@ -125,8 +125,7 @@ export function TechnicianApp() {
           <div className="text-sm font-medium">Unassigned faults near you</div>
           {pool.length === 0 ? (
             <p className="text-muted-foreground text-xs">
-              No open maintenance jobs. Ask the dispatcher to run the cluster demo,
-              or wait for a cable fault.
+              No open maintenance jobs. Control room will assign the next cable fault.
             </p>
           ) : (
             pool.map((incident) => (
@@ -216,8 +215,8 @@ function JobCard({
           Sign off restoration
         </Button>
         <p className="text-muted-foreground text-[10px]">
-          Closure photo is attached automatically for the demo. Serial and
-          signature hash into the audit chain.
+          Closure photo is attached automatically. Serial and signature hash
+          into the audit chain.
         </p>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

@@ -1,5 +1,5 @@
 /**
- * Domain types for GridPulse. These mirror the PostGIS schema in db/schema.sql
+ * Domain types for ElectroRaid. These mirror the PostGIS schema in db/schema.sql
  * so the in-memory prototype and a future Postgres deployment share one model.
  */
 

@@ -1,10 +1,10 @@
-# CODE.md — every user in ElectroRaid from GridPulse
+# CODE.md — every user in ElectroRaid
 
 This file is the user catalogue **as the code defines it**, not a marketing org chart.  
 Sources: `src/lib/types.ts`, `src/lib/seed.ts`, `src/lib/session.ts`, `src/lib/store.ts`, `navForRole`, and the four role UIs.
 
-Demo password for every login card: **`gridpulse`**.  
-Session key: `gridpulse.demo.session` in `localStorage`.
+Sign-in password: **`electroraid`**.  
+Session key: `electroraid.session` in `localStorage`.
 
 ---
 
@@ -27,11 +27,11 @@ There is **no** other role string in the union. Adding a user with a new role wo
 
 ## 2. Users seeded in `seedPlatform()` (`src/lib/seed.ts`)
 
-These rows sit in `store.users` after boot or demo reset.
+These rows sit in `store.users` after boot.
 
 | `id` | `fullName` | `role` | `employeeNo` | `email` | `phone` | Login? |
 | --- | --- | --- | --- | --- | --- | --- |
-| `usr_system` | ElectroRaid Engine | `system` | SYS-000 | engine@gridpulse.tshwane.gov.za | — | No |
+| `usr_system` | ElectroRaid Engine | `system` | SYS-000 | engine@electroraid.tshwane.gov.za | — | No |
 | `usr_sibusiso` | Sibusiso Mabena | `resident` | — | sibusiso@resident.tshwane | +27 82 441 0190 | **Yes** |
 | `usr_thandiwe` | Thandiwe Nkosi | `dispatcher` | COT-4412 | t.nkosi@tshwane.gov.za | +27 12 358 4412 | **Yes** |
 | `usr_sipho` | Sipho Dlamini | `technician` | COT-2281 | s.dlamini@tshwane.gov.za | +27 82 441 2281 | **Yes** |
@@ -44,7 +44,7 @@ These rows sit in `store.users` after boot or demo reset.
 
 ---
 
-## 3. Demo personas (who can actually sign in)
+## 3. Sign-in accounts
 
 `PERSONAS` in `src/lib/session.ts` — four cards on `/login`.
 
@@ -75,7 +75,7 @@ He cannot open `/ops`, `/audit`, `/tech`, or `/inspect` — `AppShell` bounces h
 | --- | --- |
 | `id` | `usr_thandiwe` |
 | `home` | `/ops` |
-| Nav | Command `/ops`, Demo `/demo`, Audit `/audit`, ROI `/analytics` |
+| Nav | Command `/ops`, Audit `/audit`, ROI `/analytics` |
 
 **What the code lets her do**
 
@@ -83,7 +83,6 @@ He cannot open `/ops`, `/audit`, `/tech`, or `/inspect` — `AppShell` bounces h
 - Queue: needs a crew / in the field / waiting for resident confirm / revenue jobs.  
 - Ticket detail lists **named crews** (`Assign MT-12 Mamelodi · 8 min`). `POST /api/dispatch` with `crewId` puts that job on the technician **immediately**; the household tracks the van.  
 - Nearest-crew shortcut still uses `recommend_crew()` (`src/lib/engines/dispatch.ts`).  
-- Run scripted acts via `POST /api/demo/step` (cluster, anomaly scan, inspector path, reset).  
 - Read the plain-language audit diary and ZAR ROI.
 
 Audit actor for assignments is `usr_thandiwe` (`DISPATCHER_ASSIGNED_CREW`).
@@ -172,7 +171,6 @@ Live technician GPS: `startChase` in `src/lib/store.ts` lerps the van toward the
 | `/tech` |  | ✓ |  |  |  |
 | `/inspect` |  |  | ✓ |  |  |
 | `/ops` Command |  |  |  | ✓ | ✓ |
-| `/demo` |  |  |  | ✓ |  |
 | `/audit` |  |  |  | ✓ |  |
 | `/analytics` ROI |  |  |  | ✓ | ✓ |
 | `/login` | all (no shell) |  |  |  |  |
@@ -221,7 +219,7 @@ Reporters on tickets (Lindiwe Sithole, J. Kekana, clinic staff, etc.) are `Outag
 
 1. Add a `User` in `seedPlatform()`.  
 2. If they drive a van, add a `FieldCrew` with that `userId`.  
-3. If they need the fake login, add a `DemoPersona` in `PERSONAS` with `home` + `navForRole` already covering their `role`.  
+3. If they need a login card, add a `DemoPersona` in `PERSONAS` with `home` + `navForRole` already covering their `role`.  
 4. Do **not** invent a role string until you extend `UserRole`.
 
 ---

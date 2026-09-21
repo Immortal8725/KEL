@@ -7,7 +7,7 @@ import {
   personaByEmail,
   personaById,
   type DemoPersona,
-  DEMO_PASSWORD,
+  SIGNIN_PASSWORD,
 } from "./session";
 
 interface SessionValue {
@@ -56,7 +56,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       },
       loginWithPassword: (email: string, password: string) => {
         const found = personaByEmail(email);
-        if (!found || password !== DEMO_PASSWORD) return null;
+        if (!found || password !== SIGNIN_PASSWORD) return null;
         setPersona(found);
         localStorage.setItem(SESSION_KEY, JSON.stringify({ id: found.id }));
         return found;
@@ -78,4 +78,4 @@ export function useSession() {
   return useContext(SessionContext);
 }
 
-export { PERSONAS, DEMO_PASSWORD };
+export { PERSONAS, SIGNIN_PASSWORD };

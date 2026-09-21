@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ElectroRaid from GridPulse · City of Tshwane",
+  title: "ElectroRaid · City of Tshwane",
   description:
-    "ElectroRaid from GridPulse — smart outage management and revenue protection for the City of Tshwane: spatial clustering, Izinyoka detection, field dispatch, and immutable audit.",
+    "ElectroRaid — smart outage management and revenue protection for the City of Tshwane: spatial clustering, Izinyoka detection, field dispatch, and immutable audit.",
   applicationName: "ElectroRaid",
   manifest: "/manifest.json",
   appleWebApp: {

@@ -170,8 +170,8 @@ function EmptyJob({ role }: { role: RoleView }) {
       <div className="font-medium">No active job</div>
       <p className="text-muted-foreground mt-1 text-xs">
         {role === "technician"
-          ? "Run the demo cluster, then dispatch a maintenance crew. The job card will appear here."
-          : "Run the zero-consumption scan and dispatch RP-03 East. Evidence and fines live on this card."}
+          ? "Wait for control room to assign a maintenance job. It will appear on this card."
+          : "Wait for a revenue-protection assignment. Evidence and fines live on this card."}
       </p>
     </div>
   );
