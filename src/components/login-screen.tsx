@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PERSONAS, DEMO_PASSWORD, useSession } from "@/lib/use-session";
+import { goReplace } from "@/lib/hard-nav";
 
 export function LoginScreen() {
-  const router = useRouter();
   const { login, loginWithPassword } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState(DEMO_PASSWORD);
@@ -15,7 +14,7 @@ export function LoginScreen() {
 
   function enter(id: string) {
     const persona = login(id);
-    if (persona) router.replace(persona.home);
+    if (persona) goReplace(persona.home);
   }
 
   function submitPassword(e: React.FormEvent) {
@@ -25,7 +24,7 @@ export function LoginScreen() {
       setError("Unknown demo account. Password for every persona is gridpulse.");
       return;
     }
-    router.replace(persona.home);
+    goReplace(persona.home);
   }
 
   return (

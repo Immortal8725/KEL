@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Activity, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlatform } from "@/lib/use-platform";
@@ -10,10 +9,10 @@ import { useEffect, useState } from "react";
 import { useSession } from "@/lib/use-session";
 import { navForRole } from "@/lib/session";
 import { Button } from "@/components/ui/button";
+import { go, goReplace } from "@/lib/hard-nav";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { connected, roi } = usePlatform();
   const { persona, ready, logout } = useSession();
   const [clock, setClock] = useState("");
@@ -35,8 +34,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
-    if (!persona) router.replace("/login");
-  }, [ready, persona, router]);
+    if (!persona) goReplace("/login");
+  }, [ready, persona]);
 
   useEffect(() => {
     if (!ready || !persona) return;
@@ -44,8 +43,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const ok = allowed.some(
       (href) => pathname === href || pathname.startsWith(`${href}/`),
     );
-    if (!ok) router.replace(persona.home);
-  }, [ready, persona, pathname, router]);
+    if (!ok) goReplace(persona.home);
+  }, [ready, persona, pathname]);
 
   if (!ready || !persona) {
     return (
@@ -76,9 +75,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {nav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
-              <Link
+              <a
                 key={item.href}
                 href={item.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  go(item.href);
+                }}
                 className={cn(
                   "rounded-lg px-3 py-2 text-sm transition-colors",
                   active
@@ -87,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               >
                 {item.label}
-              </Link>
+              </a>
             );
           })}
         </nav>
@@ -108,7 +111,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="mt-3 w-full"
             onClick={() => {
               logout();
-              router.push("/login");
+              go("/login");
             }}
           >
             <LogOut className="size-3.5" />
@@ -132,7 +135,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="text-muted-foreground hover:text-foreground md:hidden"
               onClick={() => {
                 logout();
-                router.push("/login");
+                go("/login");
               }}
             >
               Switch
@@ -168,16 +171,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {nav.map((item) => {
               const active = pathname === item.href;
               return (
-                <Link
+                <a
                   key={item.href}
                   href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    go(item.href);
+                  }}
                   className={cn(
                     "py-2 text-center text-[10px]",
                     active ? "text-primary" : "text-muted-foreground",
                   )}
                 >
                   {item.label}
-                </Link>
+                </a>
               );
             })}
           </div>
