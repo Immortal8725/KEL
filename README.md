@@ -77,3 +77,23 @@ Flag an **active** prepaid meter when it has purchased **0 kWh for ≥ 60 days**
 | POST | `/api/field/action` | On-site, evidence, fine, sign-off, resident confirm/dispute, inspector QA |
 
 No database or API keys are required to run the prototype. Seeded geography uses real Tshwane suburbs (Mamelodi, Atteridgeville, Soshanguve, Hatfield, Pretoria CBD); account numbers are representative, not live CIS records.
+
+## Users in the code
+
+Every seeded person, login card, crew van, and role guard is listed in **[CODE.md](CODE.md)**.
+
+## Legal
+
+| Document | File |
+| --- | --- |
+| Privacy & Cookie Policy | [PRIVACY_POLICY.md](PRIVACY_POLICY.md) |
+| Terms of Use | [TERMS_OF_USE.md](TERMS_OF_USE.md) |
+| Acceptable Use | [legal/ACCEPTABLE_USE.md](legal/ACCEPTABLE_USE.md) |
+| Event Privacy | [legal/EVENT_PRIVACY.md](legal/EVENT_PRIVACY.md) |
+| Visitor Privacy | [legal/VISITOR_PRIVACY.md](legal/VISITOR_PRIVACY.md) |
+| Dispute Policy | [legal/DISPUTE_POLICY.md](legal/DISPUTE_POLICY.md) |
+| Generative AI | [legal/GENERATIVE_AI.md](legal/GENERATIVE_AI.md) |
+| Merchant Services | [legal/MERCHANT_SERVICES.md](legal/MERCHANT_SERVICES.md) |
+| Data Processing Agreement | [legal/DATA_PROCESSING_AGREEMENT.md](legal/DATA_PROCESSING_AGREEMENT.md) |
+| Service Providers, Sub-processors, and Affiliates | [legal/SERVICE_PROVIDERS.md](legal/SERVICE_PROVIDERS.md) |
+| Index | [legal/README.md](legal/README.md) |
