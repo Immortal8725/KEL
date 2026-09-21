@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
-      action: "onsite" | "evidence" | "fine" | "complete" | "close";
+      action: "onsite" | "evidence" | "fine" | "complete" | "close" | "confirm" | "dispute" | "qa";
       kind: JobKind;
       targetId: string;
       notes?: string;
@@ -15,6 +15,7 @@ export async function POST(request: Request) {
       dataUri?: string;
       serialNumber?: string;
       actorId?: string;
+      rating?: number;
     };
 
     const store = getStore();
@@ -46,6 +47,20 @@ export async function POST(request: Request) {
         break;
       case "close":
         store.closeInvestigation(body.targetId, "closed_no_finding");
+        break;
+      case "confirm":
+        store.residentConfirm(body.targetId, body.actorId);
+        break;
+      case "dispute":
+        store.residentDispute(body.targetId, body.actorId);
+        break;
+      case "qa":
+        store.submitQa(
+          body.targetId,
+          body.rating ?? 3,
+          body.notes ?? "",
+          body.actorId,
+        );
         break;
       default:
         return fail("Unknown field action.");

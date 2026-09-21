@@ -34,7 +34,8 @@ CREATE TYPE outage_classification AS ENUM (
   'transformer_fault',
   'streetlight',
   'meter_issue',
-  'izinyoka_tip'
+  'izinyoka_tip',
+  'other'
 );
 
 CREATE TYPE incident_status AS ENUM (
@@ -200,6 +201,10 @@ CREATE TABLE master_incidents (
   dispatched_at           TIMESTAMPTZ,
   on_site_at              TIMESTAMPTZ,
   resolved_at             TIMESTAMPTZ,
+  resident_confirmed_at   TIMESTAMPTZ,
+  qa_rating               SMALLINT CHECK (qa_rating IS NULL OR qa_rating BETWEEN 1 AND 5),
+  qa_notes                TEXT,
+  qa_by                   UUID REFERENCES users (id),
   first_reported_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_activity_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

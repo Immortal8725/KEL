@@ -19,7 +19,8 @@ export type OutageClassification =
   | "transformer_fault"
   | "streetlight"
   | "meter_issue"
-  | "izinyoka_tip";
+  | "izinyoka_tip"
+  | "other";
 
 export type IncidentStatus =
   | "open"
@@ -147,6 +148,10 @@ export interface MasterIncident {
   resolvedAt: string | null;
   firstReportedAt: string;
   lastActivityAt: string;
+  residentConfirmedAt?: string | null;
+  qaRating?: number | null;
+  qaNotes?: string | null;
+  qaBy?: string | null;
 }
 
 export interface OutageReport {
@@ -227,6 +232,8 @@ export interface IngestReportInput {
   classification: OutageClassification;
   channel: ReportChannel;
   notes?: string | null;
+  /** Used when the resident picks a type on an anonymous tip. */
+  investigationType?: InvestigationType | "other";
   criticalInfrastructure?: boolean;
   feederId?: string | null;
   reportedAt?: string;

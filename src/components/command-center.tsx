@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { CommandMap } from "@/components/command-map";
 import { DemoRail } from "@/components/demo-rail";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import {
   classificationLabel,
   formatZar,
   formatMinutes,
+  incidentStatusColor,
+  incidentStatusLabel,
   relativeMinutes,
 } from "@/lib/format";
 import { usePlatform, postJson } from "@/lib/use-platform";
@@ -30,6 +32,11 @@ export function CommandCenter() {
         (i) => i.status !== "resolved" && i.status !== "closed",
       ),
     [snapshot],
+  );
+  const needsCrew = openIncidents.filter((i) => !i.assignedCrewId);
+  const inField = openIncidents.filter((i) => i.assignedCrewId);
+  const awaitingResident = (snapshot?.incidents ?? []).filter(
+    (i) => i.status === "resolved",
   );
 
   if (error && !snapshot) {
@@ -59,15 +66,19 @@ export function CommandCenter() {
           onSelect={setSelectedId}
         />
         <div className="pointer-events-none absolute inset-x-3 top-3 z-[400] flex flex-wrap gap-2">
-          <Kpi label="Open incidents" value={String(roi.openIncidents)} />
-          <Kpi label="Izinyoka queue" value={String(roi.openInvestigations)} tone="gold" />
-          <Kpi label="Recovered" value={formatZar(roi.recoveredZar)} tone="gold" />
-          <Kpi label="Fleet saved" value={formatZar(roi.fleetSavingsZar)} />
-          <Kpi label="MTTD" value={formatMinutes(roi.mttdMinutes)} />
+          <Kpi label="Open outages" value={String(roi.openIncidents)} hint="Tickets not yet restored" />
+          <Kpi label="Revenue cases" value={String(roi.openInvestigations)} tone="gold" hint="Izinyoka / zero-kWh queue" />
+          <Kpi label="Revenue recovered" value={formatZar(roi.recoveredZar)} tone="gold" hint="Fines + back-bill + penalties" />
+          <Kpi label="Duplicate vans avoided" value={formatZar(roi.fleetSavingsZar)} hint="500 m merge savings" />
+          <Kpi label="Avg time to send a crew" value={formatMinutes(roi.mttdMinutes)} hint="MTTD — first report to dispatch" />
         </div>
+        <MapLegend />
         {liveEvent ? (
-          <div className="absolute bottom-3 left-3 z-[400] max-w-md rounded-lg border border-primary/30 bg-background/90 px-3 py-2 text-xs shadow-lg backdrop-blur">
-            <div className="text-primary font-medium">{liveEvent.title}</div>
+          <div className="absolute right-3 bottom-14 z-[400] max-w-xs rounded-lg border border-primary/30 bg-background/90 px-3 py-2 text-xs shadow-lg backdrop-blur">
+            <div className="text-[10px] tracking-wide text-primary uppercase">
+              Live update
+            </div>
+            <div className="text-primary mt-0.5 font-medium">{liveEvent.title}</div>
             <div className="text-muted-foreground mt-0.5">{liveEvent.detail}</div>
           </div>
         ) : null}
@@ -76,9 +87,9 @@ export function CommandCenter() {
       <aside className="flex min-h-0 flex-col border-t border-border lg:border-t-0 lg:border-l">
         <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
           <div>
-            <div className="text-xs font-medium">Priority queue</div>
+            <div className="text-xs font-medium">Work queue</div>
             <div className="text-muted-foreground text-[11px]">
-              500 m / 2 h spatial merge · live scoring
+              Coloured dots match the map. 500 m / 2 h nearby reports merge into one ticket.
             </div>
           </div>
           <Button size="sm" variant="outline" onClick={() => setDemoOpen((v) => !v)}>
@@ -88,23 +99,62 @@ export function CommandCenter() {
 
         {demoOpen ? <DemoRail /> : null}
 
+        <QueueKey />
+
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-2 p-3">
-            {openIncidents.map((incident) => (
-              <IncidentRow
-                key={incident.id}
-                incident={incident}
-                reportCount={
-                  snapshot.reports.filter((r) => r.masterIncidentId === incident.id)
-                    .length
-                }
-                active={selectedId === incident.id}
-                onClick={() => setSelectedId(incident.id)}
-              />
-            ))}
-            <div className="text-muted-foreground pt-2 text-[11px] tracking-wide uppercase">
-              Revenue protection
-            </div>
+            <SectionTitle>Needs a crew (open tickets)</SectionTitle>
+            {needsCrew.length === 0 ? (
+              <EmptyNote>Every open outage already has a van.</EmptyNote>
+            ) : (
+              needsCrew.map((incident) => (
+                <IncidentRow
+                  key={incident.id}
+                  incident={incident}
+                  reportCount={
+                    snapshot.reports.filter((r) => r.masterIncidentId === incident.id)
+                      .length
+                  }
+                  active={selectedId === incident.id}
+                  onClick={() => setSelectedId(incident.id)}
+                />
+              ))
+            )}
+            <SectionTitle>Crews in the field</SectionTitle>
+            {inField.length === 0 ? (
+              <EmptyNote>No technician is en route or on site right now.</EmptyNote>
+            ) : (
+              inField.map((incident) => (
+                <IncidentRow
+                  key={incident.id}
+                  incident={incident}
+                  reportCount={
+                    snapshot.reports.filter((r) => r.masterIncidentId === incident.id)
+                      .length
+                  }
+                  active={selectedId === incident.id}
+                  onClick={() => setSelectedId(incident.id)}
+                />
+              ))
+            )}
+            <SectionTitle>Waiting for resident to confirm restore</SectionTitle>
+            {awaitingResident.length === 0 ? (
+              <EmptyNote>No technician has signed off a job that still needs a household confirm.</EmptyNote>
+            ) : (
+              awaitingResident.map((incident) => (
+                <IncidentRow
+                  key={incident.id}
+                  incident={incident}
+                  reportCount={
+                    snapshot.reports.filter((r) => r.masterIncidentId === incident.id)
+                      .length
+                  }
+                  active={selectedId === incident.id}
+                  onClick={() => setSelectedId(incident.id)}
+                />
+              ))
+            )}
+            <SectionTitle>Revenue protection (inspectors, not repair techs)</SectionTitle>
             {snapshot.investigations
               .filter(
                 (i) =>
@@ -143,10 +193,12 @@ function Kpi({
   label,
   value,
   tone,
+  hint,
 }: {
   label: string;
   value: string;
   tone?: "gold";
+  hint?: string;
 }) {
   return (
     <div className="pointer-events-auto rounded-lg border border-border/80 bg-background/85 px-3 py-1.5 shadow backdrop-blur">
@@ -158,8 +210,117 @@ function Kpi({
       >
         {value}
       </div>
+      {hint ? <div className="text-muted-foreground text-[10px]">{hint}</div> : null}
     </div>
   );
+}
+
+function MapLegend() {
+  return (
+    <div className="pointer-events-auto absolute bottom-3 left-3 z-[400] max-w-[280px] rounded-lg border border-border/80 bg-background/92 px-3 py-2 text-[11px] shadow-lg backdrop-blur">
+      <div className="mb-1.5 font-medium">Map key — what each mark means</div>
+      <ul className="space-y-1.5">
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 size-3 shrink-0 rounded-full bg-[#e24b4b]" />
+          <span>
+            <span className="text-foreground font-medium">Red circle</span> — critical
+            outage. Bigger = more households.
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 size-3 shrink-0 rounded-full bg-[#f0a202]" />
+          <span>
+            <span className="text-foreground font-medium">Orange circle</span> — high
+            priority outage.
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 size-3 shrink-0 rounded-full bg-[#3dd6a0]" />
+          <span>
+            <span className="text-foreground font-medium">Teal circle</span> — medium /
+            on-site job.
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 size-3 shrink-0 rounded-full bg-[#7aa0b3]/40 ring-1 ring-[#7aa0b3]" />
+          <span>
+            <span className="text-foreground font-medium">Faded circle</span> — technician
+            finished, waiting for the resident to confirm.
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 size-2.5 shrink-0 rotate-45 bg-[#e4c35a]" />
+          <span>
+            <span className="text-foreground font-medium">Gold diamond</span> — Izinyoka /
+            revenue investigation (not a cable fault).
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 size-2.5 shrink-0 rounded-full bg-[#5ec8ff]" />
+          <span>
+            <span className="text-foreground font-medium">Blue dot + Tech</span> —
+            maintenance technician van.
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 size-2.5 shrink-0 rounded-full bg-[#e4c35a]" />
+          <span>
+            <span className="text-foreground font-medium">Gold dot + Inspector</span> —
+            revenue-protection vehicle.
+          </span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="mt-0.5 size-3 shrink-0 rounded-full border border-dashed border-[#3dd6a0]" />
+          <span>
+            <span className="text-foreground font-medium">Teal dashed ring</span> — 500 m
+            merge geofence around the selected ticket.
+          </span>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+function QueueKey() {
+  return (
+    <div className="border-b border-border px-3 py-2 text-[11px]">
+      <div className="text-muted-foreground mb-1 tracking-wide uppercase">
+        Queue icons
+      </div>
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-[#e24b4b]" /> Open — needs a crew
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-[#5ec8ff]" /> En route — driving
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-[#3dd6a0]" /> On site — logged in
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-[#e4c35a]" /> Tech done — confirm
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rotate-45 bg-[#e4c35a]" /> Diamond — inspector job
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-[#7aa0b3]" /> Closed — resident OK
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <div className="text-muted-foreground pt-1 text-[11px] tracking-wide uppercase">
+      {children}
+    </div>
+  );
+}
+
+function EmptyNote({ children }: { children: ReactNode }) {
+  return <p className="text-muted-foreground px-1 text-[11px]">{children}</p>;
 }
 
 function IncidentRow({
@@ -174,6 +335,7 @@ function IncidentRow({
   onClick: () => void;
 }) {
   const band = priorityBand(incident.priorityScore);
+  const color = incidentStatusColor(incident.status);
   return (
     <button
       type="button"
@@ -183,7 +345,14 @@ function IncidentRow({
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[11px]">{incident.reference}</span>
+        <span className="flex items-center gap-2 font-mono text-[11px]">
+          <span
+            className="size-2.5 shrink-0 rounded-full"
+            style={{ background: color }}
+            title={incidentStatusLabel(incident.status)}
+          />
+          {incident.reference}
+        </span>
         <Badge
           variant={band === "critical" || band === "high" ? "destructive" : "secondary"}
         >
@@ -192,12 +361,16 @@ function IncidentRow({
       </div>
       <div className="mt-1 text-[12px] font-medium">{incident.suburb}</div>
       <div className="text-muted-foreground mt-0.5">
-        {incident.affectedHouseholds} households · {reportCount} reports ·{" "}
-        {classificationLabel(incident.classification)}
+        {incidentStatusLabel(incident.status)}
       </div>
       <div className="text-muted-foreground mt-0.5">
-        {incident.status.replaceAll("_", " ")} · {relativeMinutes(incident.firstReportedAt)}
-        {incident.criticalInfrastructure ? " · critical infra" : ""}
+        {incident.affectedHouseholds} households · {reportCount} reports ·{" "}
+        {classificationLabel(incident.classification)}
+        {incident.qaRating ? ` · QA ${incident.qaRating}/5` : ""}
+      </div>
+      <div className="text-muted-foreground mt-0.5">
+        First report {relativeMinutes(incident.firstReportedAt)}
+        {incident.criticalInfrastructure ? " · hospital / critical infra" : ""}
       </div>
     </button>
   );
@@ -221,7 +394,10 @@ function InvestigationRow({
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[11px]">{inv.reference}</span>
+        <span className="flex items-center gap-2 font-mono text-[11px]">
+          <span className="size-2.5 shrink-0 rotate-45 bg-[#e4c35a]" title="Revenue investigation" />
+          {inv.reference}
+        </span>
         <span className="text-gold tabular font-semibold">risk {inv.anomalyRiskScore}</span>
       </div>
       <div className="mt-1 text-[12px] font-medium">{inv.suburb}</div>
@@ -251,10 +427,21 @@ function DetailPane({
       <div className="border-t border-border p-3 text-xs">
         <div className="font-medium">{incident.address}</div>
         <div className="text-muted-foreground mt-1">
-          {reportCount} channelled reports spatially merged · score{" "}
-          {incident.priorityScore}
+          {incidentStatusLabel(incident.status)} · {reportCount} channelled reports
+          spatially merged · score {incident.priorityScore}
         </div>
-        {incident.status === "open" || incident.status === "clustered" ? (
+        {incident.qaRating ? (
+          <div className="text-gold mt-1">
+            Inspector QA {incident.qaRating}/5
+            {incident.qaNotes ? ` · ${incident.qaNotes}` : ""}
+          </div>
+        ) : null}
+        {incident.status === "resolved" ? (
+          <div className="text-gold mt-2">
+            Technician signed off. The household must tap Confirm restored (or Still no
+            power) before this ticket closes.
+          </div>
+        ) : incident.status === "open" || incident.status === "clustered" ? (
           <Button
             size="sm"
             className="mt-2"
@@ -264,7 +451,7 @@ function DetailPane({
           </Button>
         ) : (
           <div className="text-primary mt-2">
-            {incident.status.replaceAll("_", " ")}
+            {incidentStatusLabel(incident.status)}
           </div>
         )}
       </div>

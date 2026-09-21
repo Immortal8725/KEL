@@ -28,6 +28,7 @@ import type {
   FieldCrew,
   IngestReportInput,
   InvestigationStatus,
+  InvestigationType,
   LiveEvent,
   MasterIncident,
   PlatformSnapshot,
@@ -158,10 +159,14 @@ class GridPulseStore {
   }
 
   private ingestTip(input: IngestReportInput) {
+    const tipType: InvestigationType =
+      input.investigationType && input.investigationType !== "other"
+        ? input.investigationType
+        : "izinyoka_tip";
     const ticket: RevenueInvestigation = {
       id: newId("inv"),
       reference: nextInvestigationReference(this.investigations),
-      type: "izinyoka_tip",
+      type: tipType,
       status: "flagged",
       meterId: null,
       feederId: input.feederId ?? null,
@@ -386,10 +391,13 @@ class GridPulseStore {
 
     this.emit({
       type: "field.onsite",
-      title: "Unit on site",
+      title:
+        kind === "outage"
+          ? `Technician logged on site · ${this.incidents.find((i) => i.id === targetId)?.suburb}`
+          : `Inspector logged on site · ${this.investigations.find((i) => i.id === targetId)?.suburb}`,
       detail:
         kind === "outage"
-          ? `Maintenance crew arrived at ${this.incidents.find((i) => i.id === targetId)?.reference}`
+          ? `${this.incidents.find((i) => i.id === targetId)?.address}. Please watch for the crew and confirm when power returns.`
           : `Inspector on site at ${this.investigations.find((i) => i.id === targetId)?.reference}`,
       severity: "info",
       entityType: kind === "outage" ? "master_incident" : "revenue_investigation",
@@ -540,12 +548,109 @@ class GridPulseStore {
 
     this.emit({
       type: "incident.resolved",
-      title: `${incident.reference} restored`,
-      detail: notes,
+      title: `${incident.reference} — technician finished`,
+      detail: `${incident.suburb}: crew says supply is restored. Please confirm if your lights are back.`,
       severity: "success",
       entityType: "master_incident",
       entityId: incidentId,
     });
+  }
+
+  residentConfirm(incidentId: string, actorId?: string) {
+    const idx = this.incidents.findIndex((i) => i.id === incidentId);
+    if (idx < 0) throw new Error("Unknown incident");
+    const now = nowIso();
+    const incident = this.incidents[idx];
+    this.incidents[idx] = {
+      ...incident,
+      status: "closed",
+      residentConfirmedAt: now,
+      lastActivityAt: now,
+    };
+    this.recordAudit({
+      actorId: actorId ?? "usr_sibusiso",
+      actorRole: "resident",
+      actionType: "RESIDENT_CONFIRMED_RESTORE",
+      entityType: "master_incident",
+      entityId: incidentId,
+      location: incident.location,
+      payload: { reference: incident.reference },
+    });
+    this.emit({
+      type: "incident.resident_confirmed",
+      title: `${incident.reference} closed by resident`,
+      detail: "Household confirmed power is back.",
+      severity: "success",
+      entityType: "master_incident",
+      entityId: incidentId,
+    });
+  }
+
+  residentDispute(incidentId: string, actorId?: string) {
+    const idx = this.incidents.findIndex((i) => i.id === incidentId);
+    if (idx < 0) throw new Error("Unknown incident");
+    const now = nowIso();
+    const incident = this.incidents[idx];
+    this.incidents[idx] = {
+      ...incident,
+      status: "open",
+      resolvedAt: null,
+      lastActivityAt: now,
+    };
+    this.recordAudit({
+      actorId: actorId ?? "usr_sibusiso",
+      actorRole: "resident",
+      actionType: "RESIDENT_STILL_NO_POWER",
+      entityType: "master_incident",
+      entityId: incidentId,
+      location: incident.location,
+      payload: { reference: incident.reference },
+    });
+    this.emit({
+      type: "incident.resident_dispute",
+      title: `${incident.reference} — still no power`,
+      detail: "Resident rejected the restore. Ticket reopened for dispatch.",
+      severity: "critical",
+      entityType: "master_incident",
+      entityId: incidentId,
+    });
+  }
+
+  submitQa(
+    incidentId: string,
+    rating: number,
+    notes: string,
+    actorId?: string,
+  ) {
+    const idx = this.incidents.findIndex((i) => i.id === incidentId);
+    if (idx < 0) throw new Error("Unknown incident");
+    const incident = this.incidents[idx];
+    const clamped = Math.min(5, Math.max(1, Math.round(rating)));
+    this.incidents[idx] = {
+      ...incident,
+      qaRating: clamped,
+      qaNotes: notes,
+      qaBy: actorId ?? "usr_nomsa",
+      lastActivityAt: nowIso(),
+    };
+    this.recordAudit({
+      actorId: actorId ?? "usr_nomsa",
+      actorRole: "revenue_inspector",
+      actionType: "INSPECTOR_QA_ON_REPAIR",
+      entityType: "master_incident",
+      entityId: incidentId,
+      location: incident.location,
+      payload: { reference: incident.reference, rating: clamped, notes },
+    });
+    this.emit({
+      type: "incident.qa",
+      title: `QA ${clamped}/5 on ${incident.reference}`,
+      detail: notes || "Inspector scored the technician's repair.",
+      severity: "info",
+      entityType: "master_incident",
+      entityId: incidentId,
+    });
+    return this.incidents[idx];
   }
 
   closeInvestigation(investigationId: string, status: InvestigationStatus) {

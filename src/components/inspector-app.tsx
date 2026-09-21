@@ -3,22 +3,31 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { evidenceSvg } from "@/lib/evidence";
-import { formatZar } from "@/lib/format";
+import { formatZar, incidentStatusLabel } from "@/lib/format";
 import { postJson, usePlatform } from "@/lib/use-platform";
 import { useSession } from "@/lib/use-session";
 import { enqueue, flushOutbox, pendingCount } from "@/lib/offline";
-import type { RevenueInvestigation } from "@/lib/types";
+import type { MasterIncident, RevenueInvestigation } from "@/lib/types";
+
+type InspectTab = "audits" | "qa";
+
+const QA_LABELS = ["Poor", "Fair", "Good", "Very good", "Excellent"];
 
 export function InspectorApp() {
   const { persona } = useSession();
   const { snapshot } = usePlatform();
+  const [tab, setTab] = useState<InspectTab>("audits");
   const [online, setOnline] = useState(true);
   const [queued, setQueued] = useState(0);
   const [sealBroken, setSealBroken] = useState(true);
   const [bypass, setBypass] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [qaId, setQaId] = useState<string | null>(null);
+  const [rating, setRating] = useState(4);
+  const [qaNotes, setQaNotes] = useState("");
 
   useEffect(() => {
     const sync = () => setOnline(navigator.onLine);
@@ -58,6 +67,20 @@ export function InspectorApp() {
     snapshot?.investigations.find((i) => i.id === selectedId) ??
     queue[0];
 
+  const qaJobs = useMemo(() => {
+    const jobs = (snapshot?.incidents ?? []).filter(
+      (i) => i.status === "resolved" || i.status === "closed",
+    );
+    return [...jobs].sort((a, b) => {
+      const aPending = a.qaRating ? 1 : 0;
+      const bPending = b.qaRating ? 1 : 0;
+      return aPending - bPending;
+    });
+  }, [snapshot]);
+
+  const selectedQa =
+    qaJobs.find((i) => i.id === qaId) ?? qaJobs.find((i) => !i.qaRating) ?? qaJobs[0];
+
   async function act(payload: Record<string, unknown>) {
     const body = { ...payload, actorId: persona?.id };
     if (!online) {
@@ -70,13 +93,30 @@ export function InspectorApp() {
     setStatus("Hashed into the audit chain with GPS timestamp.");
   }
 
+  async function submitQa() {
+    if (!selectedQa) return;
+    await act({
+      action: "qa",
+      kind: "outage",
+      targetId: selectedQa.id,
+      rating,
+      notes: qaNotes.trim() || `${QA_LABELS[rating - 1]} workmanship on site.`,
+    });
+    setStatus(
+      `QA ${rating}/5 recorded on ${selectedQa.reference}. Dispatcher and audit log can see it.`,
+    );
+    setQaNotes("");
+  }
+
   return (
     <div className="mx-auto min-h-full max-w-md px-4 py-6">
       <div className="text-[10px] tracking-[0.2em] text-gold uppercase">
         Revenue protection · audit kit
       </div>
       <div className="flex items-start justify-between gap-2">
-        <h1 className="font-heading text-xl font-semibold">Izinyoka audits</h1>
+        <h1 className="font-heading text-xl font-semibold">
+          {tab === "qa" ? "Repair quality assurance" : "Izinyoka audits"}
+        </h1>
         <Badge variant={online ? "secondary" : "destructive"}>
           {online ? "Online" : "Offline"}
           {queued ? ` · ${queued}` : ""}
@@ -84,74 +124,220 @@ export function InspectorApp() {
       </div>
       <p className="text-muted-foreground mt-1 text-xs">
         {crew ? `${crew.callsign} · ${crew.status.replaceAll("_", " ")}` : "No unit"}{" "}
-        · Zero-consumption flags and anonymous tips.
+        · Score the technician&apos;s repair, or run a tamper audit.
       </p>
 
-      <div className="mt-4 space-y-2">
-        {queue.map((inv) => (
-          <button
-            key={inv.id}
-            type="button"
-            onClick={() => setSelectedId(inv.id)}
-            className={`w-full rounded-xl border p-3 text-left ${
-              active?.id === inv.id ? "border-gold/60 bg-gold/10" : "border-border bg-card"
-            }`}
-          >
-            <div className="flex justify-between gap-2">
-              <span className="font-mono text-[11px]">{inv.reference}</span>
-              <span className="text-gold text-xs">risk {inv.anomalyRiskScore}</span>
-            </div>
-            <div className="text-sm font-medium">{inv.suburb}</div>
-            <div className="text-muted-foreground text-[11px]">
-              {inv.type.replaceAll("_", " ")} · {inv.status.replaceAll("_", " ")}
-              {inv.daysZeroConsumption ? ` · ${inv.daysZeroConsumption}d silent` : ""}
-            </div>
-          </button>
-        ))}
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <Button
+          variant={tab === "audits" ? "default" : "outline"}
+          onClick={() => setTab("audits")}
+        >
+          Tamper audits
+        </Button>
+        <Button
+          variant={tab === "qa" ? "default" : "outline"}
+          onClick={() => setTab("qa")}
+        >
+          Repair QA
+        </Button>
       </div>
 
-      {active ? (
-        <AuditCard
-          inv={active}
-          claimed={active.assignedCrewId === persona?.crewId}
-          sealBroken={sealBroken}
-          bypass={bypass}
-          onSeal={setSealBroken}
-          onBypass={setBypass}
-          onClaim={() =>
-            postJson("/api/dispatch", {
-              kind: "investigation",
-              targetId: active.id,
-              crewId: persona?.crewId,
-            })
-          }
-          onOnSite={() =>
-            act({ action: "onsite", kind: "investigation", targetId: active.id })
-          }
-          onEvidence={() =>
-            act({
-              action: "evidence",
-              kind: "investigation",
-              targetId: active.id,
-              caption: sealBroken
-                ? "Broken meter seal + bypass jumper"
-                : "Seal intact — no tamper visible",
-              dataUri: evidenceSvg(
-                bypass ? "Bypass confirmed" : "Meter kiosk",
-                `${active.address} · GPS ${active.location.lat.toFixed(5)}, ${active.location.lon.toFixed(5)}`,
-              ),
-            })
-          }
-          onFine={() =>
-            act({ action: "fine", kind: "investigation", targetId: active.id })
-          }
-        />
+      {tab === "audits" ? (
+        <>
+          <div className="mt-4 space-y-2">
+            {queue.map((inv) => (
+              <button
+                key={inv.id}
+                type="button"
+                onClick={() => setSelectedId(inv.id)}
+                className={`w-full rounded-xl border p-3 text-left ${
+                  active?.id === inv.id
+                    ? "border-gold/60 bg-gold/10"
+                    : "border-border bg-card"
+                }`}
+              >
+                <div className="flex justify-between gap-2">
+                  <span className="font-mono text-[11px]">{inv.reference}</span>
+                  <span className="text-gold text-xs">risk {inv.anomalyRiskScore}</span>
+                </div>
+                <div className="text-sm font-medium">{inv.suburb}</div>
+                <div className="text-muted-foreground text-[11px]">
+                  {inv.type.replaceAll("_", " ")} · {inv.status.replaceAll("_", " ")}
+                  {inv.daysZeroConsumption ? ` · ${inv.daysZeroConsumption}d silent` : ""}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {active ? (
+            <AuditCard
+              inv={active}
+              claimed={active.assignedCrewId === persona?.crewId}
+              sealBroken={sealBroken}
+              bypass={bypass}
+              onSeal={setSealBroken}
+              onBypass={setBypass}
+              onClaim={() =>
+                postJson("/api/dispatch", {
+                  kind: "investigation",
+                  targetId: active.id,
+                  crewId: persona?.crewId,
+                })
+              }
+              onOnSite={() =>
+                act({ action: "onsite", kind: "investigation", targetId: active.id })
+              }
+              onEvidence={() =>
+                act({
+                  action: "evidence",
+                  kind: "investigation",
+                  targetId: active.id,
+                  caption: sealBroken
+                    ? "Broken meter seal + bypass jumper"
+                    : "Seal intact — no tamper visible",
+                  dataUri: evidenceSvg(
+                    bypass ? "Bypass confirmed" : "Meter kiosk",
+                    `${active.address} · GPS ${active.location.lat.toFixed(5)}, ${active.location.lon.toFixed(5)}`,
+                  ),
+                })
+              }
+              onFine={() =>
+                act({ action: "fine", kind: "investigation", targetId: active.id })
+              }
+            />
+          ) : (
+            <p className="text-muted-foreground mt-4 text-xs">
+              No investigation on the queue. Ask dispatch to run the anomaly scan.
+            </p>
+          )}
+        </>
       ) : (
-        <p className="text-muted-foreground mt-4 text-xs">
-          No investigation on the queue. Ask dispatch to run the anomaly scan.
-        </p>
+        <QaPanel
+          jobs={qaJobs}
+          selected={selectedQa}
+          snapshotCrews={snapshot?.crews ?? []}
+          snapshotUsers={snapshot?.users ?? []}
+          rating={rating}
+          notes={qaNotes}
+          onSelect={(id) => {
+            setQaId(id);
+            const job = qaJobs.find((j) => j.id === id);
+            if (job?.qaRating) setRating(job.qaRating);
+            setQaNotes(job?.qaNotes ?? "");
+          }}
+          onRating={setRating}
+          onNotes={setQaNotes}
+          onSubmit={submitQa}
+        />
       )}
       {status ? <p className="text-gold mt-4 text-xs">{status}</p> : null}
+    </div>
+  );
+}
+
+function QaPanel({
+  jobs,
+  selected,
+  snapshotCrews,
+  snapshotUsers,
+  rating,
+  notes,
+  onSelect,
+  onRating,
+  onNotes,
+  onSubmit,
+}: {
+  jobs: MasterIncident[];
+  selected?: MasterIncident;
+  snapshotCrews: { id: string; userId: string; callsign: string }[];
+  snapshotUsers: { id: string; fullName: string }[];
+  rating: number;
+  notes: string;
+  onSelect: (id: string) => void;
+  onRating: (n: number) => void;
+  onNotes: (v: string) => void;
+  onSubmit: () => void;
+}) {
+  if (jobs.length === 0) {
+    return (
+      <p className="text-muted-foreground mt-4 text-xs">
+        No technician jobs waiting for quality assurance. Jobs appear here after a
+        technician signs off restoration.
+      </p>
+    );
+  }
+
+  const crew = snapshotCrews.find((c) => c.id === selected?.assignedCrewId);
+  const tech = snapshotUsers.find((u) => u.id === crew?.userId);
+
+  return (
+    <div className="mt-4 space-y-3">
+      <p className="text-muted-foreground text-xs">
+        Rate the physical repair the technician logged — joint quality, site left
+        safe, serial captured. This is not a tamper fine.
+      </p>
+      {jobs.map((job) => (
+        <button
+          key={job.id}
+          type="button"
+          onClick={() => onSelect(job.id)}
+          className={`w-full rounded-xl border p-3 text-left ${
+            selected?.id === job.id
+              ? "border-gold/60 bg-gold/10"
+              : "border-border bg-card"
+          }`}
+        >
+          <div className="flex justify-between gap-2">
+            <span className="font-mono text-[11px]">{job.reference}</span>
+            <span className="text-xs">
+              {job.qaRating ? `QA ${job.qaRating}/5` : "Needs QA"}
+            </span>
+          </div>
+          <div className="text-sm font-medium">{job.suburb}</div>
+          <div className="text-muted-foreground text-[11px]">
+            {incidentStatusLabel(job.status)}
+          </div>
+        </button>
+      ))}
+
+      {selected ? (
+        <div className="rounded-xl border border-gold/40 bg-card p-4">
+          <div className="font-mono text-xs">{selected.reference}</div>
+          <div className="mt-1 font-semibold">{selected.address}</div>
+          <div className="text-muted-foreground mt-1 text-xs">
+            Technician {tech?.fullName ?? "unknown"}
+            {crew ? ` · ${crew.callsign}` : ""} · {selected.affectedHouseholds}{" "}
+            households
+          </div>
+          <div className="mt-3 text-xs font-medium">Workmanship score</div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Button
+                key={n}
+                size="sm"
+                variant={rating === n ? "default" : "outline"}
+                onClick={() => onRating(n)}
+              >
+                {n} · {QA_LABELS[n - 1]}
+              </Button>
+            ))}
+          </div>
+          <label className="text-muted-foreground mt-3 block text-[11px]">
+            Inspector notes
+            <Input
+              className="mt-1"
+              value={notes}
+              onChange={(e) => onNotes(e.target.value)}
+              placeholder="Joint quality, site left safe, serial captured…"
+            />
+          </label>
+          <Button className="mt-3 w-full" onClick={onSubmit}>
+            {selected.qaRating
+              ? "Update QA on this repair"
+              : "Submit quality assurance"}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

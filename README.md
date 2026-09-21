@@ -15,10 +15,10 @@ Open [http://localhost:43147](http://localhost:43147). You land on a **fake logi
 
 | Persona | Role | Lands on |
 | --- | --- | --- |
-| Sibusiso Mabena | Resident | `/resident` — outage report, anonymous Izinyoka tip, WhatsApp-style ETA |
-| Thandiwe Nkosi | Dispatcher | `/ops` — live map, clustered tickets, **Play all 4 acts**, ROI |
+| Sibusiso Mabena | Resident | `/resident` — dropdown for the fault, anonymous tip (with Other), technician on-site / done notifications, Confirm restored |
+| Thandiwe Nkosi | Dispatcher | `/ops` — live map with labelled legend, clustered tickets, **Play all 4 acts**, ROI |
 | Sipho Dlamini | Field technician | `/tech` — En Route / On Site / Resolved, serial + signature |
-| Nomsa Khumalo | Revenue investigator | `/inspect` — zero-kWh audits, seal check, digital fine |
+| Nomsa Khumalo | Revenue investigator | `/inspect` — zero-kWh audits **and Repair QA** on technician work |
 
 Use **Switch user** in the sidebar to hop personas without a real IdP.
 
@@ -52,10 +52,10 @@ Flag an **active** prepaid meter when it has purchased **0 kWh for ≥ 60 days**
 
 | User | Interface | Responsibility |
 | --- | --- | --- |
-| Resident | `/resident` PWA / WhatsApp-style | Report outages, anonymous tips, track repair ETA |
-| Dispatcher | `/ops` admin portal | Heatmap, deduplicated master tickets, vending anomalies, assign crews |
+| Resident | `/resident` PWA / WhatsApp-style | Choose what to report from a dropdown (Other if it is not listed), send anonymous tips the same way, get notified when the technician logs on site and when they finish, then Confirm restored or Still no power |
+| Dispatcher | `/ops` admin portal | Heatmap with a labelled map key, deduplicated master tickets, vending anomalies, assign crews, wait for resident confirm |
 | Field technician | `/tech` PWA | Physical repairs, live GPS status, closure proof (notes, serial, signature) |
-| Revenue investigator | `/inspect` audit PWA | Zero-consumption audits, Izinyoka evidence, digital tamper fines |
+| Revenue investigator | `/inspect` audit PWA | Zero-consumption audits, Izinyoka evidence, digital tamper fines, **quality assurance on the technician's repair** |
 - Dispatch picks the nearest available unit of the right specialisation, penalised by current queue size
 
 ## Field PWA
@@ -74,6 +74,6 @@ Flag an **active** prepaid meter when it has purchased **0 kWh for ≥ 60 days**
 | POST | `/api/demo/step` | Scripted hackathon acts |
 | GET | `/api/audit` | Immutable ledger |
 | GET | `/api/analytics` | Municipal ROI |
-| POST | `/api/field/action` | On-site, evidence, fine, sign-off |
+| POST | `/api/field/action` | On-site, evidence, fine, sign-off, resident confirm/dispute, inspector QA |
 
 No database or API keys are required to run the prototype. Seeded geography uses real Tshwane suburbs (Mamelodi, Atteridgeville, Soshanguve, Hatfield, Pretoria CBD); account numbers are representative, not live CIS records.

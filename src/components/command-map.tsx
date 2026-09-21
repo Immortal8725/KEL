@@ -118,7 +118,7 @@ export function CommandMap({
           fillOpacity: open ? 0.45 : 0.15,
         }).on("click", () => selectRef.current(incident.id));
         marker.bindTooltip(
-          `<strong>${incident.reference}</strong><br/>${incident.suburb} · ${incident.affectedHouseholds} hh`,
+          `<strong>${incident.reference}</strong><br/>${incident.suburb} · ${incident.affectedHouseholds} hh<br/>${incident.status.replaceAll("_", " ")}`,
         );
         group.addLayer(marker);
         if (selectedId === incident.id) {
@@ -147,7 +147,7 @@ export function CommandMap({
           L.marker([inv.location.lat, inv.location.lon], { icon })
             .on("click", () => selectRef.current(inv.id))
             .bindTooltip(
-              `<strong>${inv.reference}</strong><br/>Risk ${inv.anomalyRiskScore}`,
+              `<strong>${inv.reference}</strong><br/>Inspector job · Risk ${inv.anomalyRiskScore}`,
             ),
         );
       }
@@ -159,14 +159,14 @@ export function CommandMap({
           className: "",
           html: `<div style="display:flex;flex-direction:column;align-items:center">
             <div style="width:10px;height:10px;border-radius:99px;background:${color};box-shadow:0 0 10px ${color}"></div>
-            <div style="margin-top:2px;font:10px/1 ui-sans-serif;color:#d7efe6;background:#071016cc;padding:1px 4px;border-radius:4px;white-space:nowrap">${crew.callsign}</div>
+            <div style="margin-top:2px;font:10px/1 ui-sans-serif;color:#d7efe6;background:#071016cc;padding:1px 4px;border-radius:4px;white-space:nowrap">${crew.specialization === "revenue_protection" ? "Inspector" : "Tech"} · ${crew.callsign.split(" ")[0]}</div>
           </div>`,
           iconSize: [80, 28],
           iconAnchor: [40, 8],
         });
         group.addLayer(
           L.marker([crew.location.lat, crew.location.lon], { icon }).bindTooltip(
-            `${crew.callsign} · ${crew.status.replaceAll("_", " ")}`,
+            `${crew.specialization === "revenue_protection" ? "Inspector" : "Technician"} · ${crew.callsign} · ${crew.status.replaceAll("_", " ")}`,
           ),
         );
       }

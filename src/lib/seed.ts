@@ -298,6 +298,9 @@ export function seedPlatform(): PlatformSnapshot {
   const northOpened = hoursAgo(3.2, T0);
   const hatResolvedOpen = hoursAgo(9, T0);
   const hatResolvedClose = hoursAgo(6.4, T0);
+  const mamOpened = hoursAgo(2.4, T0);
+  const mamOnSite = minutesAgo(22, T0);
+  const mamResolved = minutesAgo(8, T0);
 
   const incidents: MasterIncident[] = [
     {
@@ -376,6 +379,25 @@ export function seedPlatform(): PlatformSnapshot {
       firstReportedAt: hatResolvedOpen,
       lastActivityAt: hatResolvedClose,
     },
+    {
+      id: "inc_mam_done",
+      reference: "TSH-OUT-2026-0193",
+      classification: "no_power",
+      status: "resolved",
+      location: pt(28.394, -25.7234),
+      address: "12 Tsamaya Road, Mamelodi Ext 11",
+      suburb: "Mamelodi",
+      feederId: "fdr_mam_12",
+      affectedHouseholds: 18,
+      criticalInfrastructure: false,
+      priorityScore: computePriorityScore(18, false, mamOpened, T0),
+      assignedCrewId: "crew_mt_mamelodi",
+      dispatchedAt: hoursAgo(2.1, T0),
+      onSiteAt: mamOnSite,
+      resolvedAt: mamResolved,
+      firstReportedAt: mamOpened,
+      lastActivityAt: mamResolved,
+    },
   ];
 
   const reports: OutageReport[] = [
@@ -386,6 +408,7 @@ export function seedPlatform(): PlatformSnapshot {
     rpt("inc_sos_tx", "3290014419", "P. Nkosi", pt(28.1033, -25.529), "Block L 40, Soshanguve", "no_power", "app", minutesAgo(28, T0), null),
     rpt("inc_north_lights", "3058810021", "Ward 5 office", pt(28.1762, -25.6794), "President Steyn Street", "streetlight", "walk_in", northOpened, null),
     rpt("inc_hat_done", "3081120004", "Campus protection", pt(28.2376, -25.7472), "Festival Street, Hatfield", "voltage_fluctuation", "call_centre", hatResolvedOpen, null),
+    rpt("inc_mam_done", "3218840441", "Sibusiso Mabena", pt(28.394, -25.7234), "12 Tsamaya Road, Mamelodi Ext 11", "no_power", "whatsapp", mamOpened, "Whole street dark after a bang."),
   ];
 
   const investigations: RevenueInvestigation[] = [
@@ -540,6 +563,37 @@ export function seedPlatform(): PlatformSnapshot {
       payload: { reference: "TSH-OUT-2026-0179", notes: "Tap-changer reset, voltage restored." },
       occurredAt: hatResolvedClose,
     },
+    {
+      actorId: "usr_thandiwe",
+      actorRole: "dispatcher",
+      actionType: "DISPATCHER_ASSIGNED_CREW",
+      entityType: "master_incident",
+      entityId: "inc_mam_done",
+      payload: { callsign: "MT-12 Mamelodi", technicianName: "Sipho Dlamini" },
+      occurredAt: hoursAgo(2.1, T0),
+    },
+    {
+      actorId: "usr_sipho",
+      actorRole: "technician",
+      actionType: "FIELD_UNIT_ON_SITE",
+      entityType: "master_incident",
+      entityId: "inc_mam_done",
+      location: pt(28.394, -25.7234),
+      payload: { status: "on_site" },
+      occurredAt: mamOnSite,
+    },
+    {
+      actorId: "usr_sipho",
+      actorRole: "technician",
+      actionType: "TECHNICIAN_WORK_COMPLETED",
+      entityType: "master_incident",
+      entityId: "inc_mam_done",
+      payload: {
+        reference: "TSH-OUT-2026-0193",
+        notes: "Replaced failed 11 kV cable joint. Supply restored.",
+      },
+      occurredAt: mamResolved,
+    },
   ];
   for (const w of writes) audit = [...audit, appendAudit(audit, w)];
 
@@ -573,6 +627,28 @@ export function seedPlatform(): PlatformSnapshot {
       severity: "warn",
       entityType: "master_incident",
       entityId: "inc_sos_tx",
+    },
+    {
+      id: "evt_seed_mam_onsite",
+      type: "field.onsite",
+      title: "Technician logged on site · Mamelodi",
+      detail:
+        "12 Tsamaya Road, Mamelodi Ext 11. Please watch for the crew and confirm when power returns.",
+      at: mamOnSite,
+      severity: "info",
+      entityType: "master_incident",
+      entityId: "inc_mam_done",
+    },
+    {
+      id: "evt_seed_mam_done",
+      type: "incident.resolved",
+      title: "TSH-OUT-2026-0193 — technician finished",
+      detail:
+        "Mamelodi: crew says supply is restored. Please confirm if your lights are back.",
+      at: mamResolved,
+      severity: "success",
+      entityType: "master_incident",
+      entityId: "inc_mam_done",
     },
   ];
 

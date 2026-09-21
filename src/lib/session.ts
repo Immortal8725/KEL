@@ -26,8 +26,9 @@ export const PERSONAS: DemoPersona[] = [
     home: "/resident",
     suburb: "Mamelodi",
     accountNumber: "3218840441",
-    blurb: "Report outages, send anonymous Izinyoka tips, track the crew ETA.",
-    duties: ["Outage report", "Anonymous tip", "Live ETA"],
+    blurb:
+      "Pick what is wrong from a list (or Other), send an anonymous tip, get notified when the technician logs and when the job is done, then confirm restore.",
+    duties: ["Report dropdown", "Anonymous Other", "Confirm restore"],
   },
   {
     id: "usr_thandiwe",
@@ -36,8 +37,9 @@ export const PERSONAS: DemoPersona[] = [
     title: "Control room dispatcher",
     email: "t.nkosi@tshwane.gov.za",
     home: "/ops",
-    blurb: "Live PostGIS map, clustered master tickets, dispatch, and ROI.",
-    duties: ["Heatmap", "Dedup queue", "Assign crews"],
+    blurb:
+      "Live map with a labelled legend, clustered tickets, dispatch the right crew, and wait for the resident to confirm restore.",
+    duties: ["Map legend", "Work queue", "Assign crews"],
   },
   {
     id: "usr_sipho",
@@ -58,8 +60,9 @@ export const PERSONAS: DemoPersona[] = [
     email: "n.khumalo@tshwane.gov.za",
     home: "/inspect",
     crewId: "crew_rp_east",
-    blurb: "Zero-kWh audits, seal checks, photo evidence, digital tamper fines.",
-    duties: ["Meter audit", "Izinyoka", "Issue fine"],
+    blurb:
+      "Zero-kWh audits, seal checks, digital tamper fines, and quality-assurance scores on what the technician repaired.",
+    duties: ["Meter audit", "Izinyoka", "Repair QA"],
   },
 ];
 
@@ -84,7 +87,7 @@ export function navForRole(role: UserRole): NavItem[] {
     case "technician":
       return [{ href: "/tech", label: "Jobs" }];
     case "revenue_inspector":
-      return [{ href: "/inspect", label: "Audits" }];
+      return [{ href: "/inspect", label: "Audits & QA" }];
     case "executive":
       return [
         { href: "/analytics", label: "ROI" },
