@@ -216,9 +216,32 @@ function Kpi({
 }
 
 function MapLegend() {
+  const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="pointer-events-auto absolute bottom-3 left-3 z-[400] rounded-lg border border-border/80 bg-background/92 px-3 py-1.5 text-[11px] font-medium shadow-lg backdrop-blur"
+      >
+        Map key
+      </button>
+    );
+  }
+
   return (
     <div className="pointer-events-auto absolute bottom-3 left-3 z-[400] max-w-[280px] rounded-lg border border-border/80 bg-background/92 px-3 py-2 text-[11px] shadow-lg backdrop-blur">
-      <div className="mb-1.5 font-medium">Map key — what each mark means</div>
+      <div className="mb-1.5 flex items-center justify-between gap-3">
+        <div className="font-medium">Map key — what each mark means</div>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-muted-foreground hover:text-foreground shrink-0 text-[10px] tracking-wide uppercase"
+        >
+          Minimize
+        </button>
+      </div>
       <ul className="space-y-1.5">
         <li className="flex items-start gap-2">
           <span className="mt-0.5 size-3 shrink-0 rounded-full bg-[#e24b4b]" />

@@ -72,7 +72,7 @@ Flag an **active** prepaid meter when it has purchased **0 kWh for ≥ 60 days**
 | POST | `/api/anomalies/scan` | Run the zero-consumption worker |
 | POST | `/api/dispatch` | Assign nearest matching crew |
 | POST | `/api/demo/step` | Scripted hackathon acts |
-| GET | `/api/audit` | Immutable ledger |
+| GET | `/api/audit` | Immutable ledger (shown in `/audit` as a plain-language activity diary; seals stay hidden until you open them) |
 | GET | `/api/analytics` | Municipal ROI |
 | POST | `/api/field/action` | On-site, evidence, fine, sign-off, resident confirm/dispute, inspector QA |
 
