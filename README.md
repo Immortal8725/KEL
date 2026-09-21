@@ -17,9 +17,9 @@ Open [http://localhost:43147](http://localhost:43147). You land on a **fake logi
 
 | Persona | Role | Lands on |
 | --- | --- | --- |
-| Sibusiso Mabena | Resident | `/resident` — dropdown for the fault, anonymous tip (with Other), technician on-site / done notifications, Confirm restored |
-| Thandiwe Nkosi | Dispatcher | `/ops` — live map with labelled legend, clustered tickets, **Play all 4 acts**, ROI |
-| Sipho Dlamini | Field technician | `/tech` — En Route / On Site / Resolved, serial + signature |
+| Sibusiso Mabena | Resident | `/resident` — report a fault, **live-track the technician like Bolt**, confirm restore |
+| Thandiwe Nkosi | Dispatcher | `/ops` — tap **Assign {callsign}** on the resident’s ticket; job lands on that technician immediately |
+| Sipho Dlamini | Field technician | `/tech` — assigned jobs appear the moment control room dispatches you |
 | Nomsa Khumalo | Revenue investigator | `/inspect` — zero-kWh audits **and Repair QA** on technician work |
 
 Use **Switch user** in the sidebar to hop personas without a real IdP.

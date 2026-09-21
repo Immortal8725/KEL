@@ -87,28 +87,39 @@ export function TechnicianApp() {
       </p>
 
       {assigned ? (
-        <JobCard
-          incident={assigned}
-          notes={notes}
-          serial={serial}
-          signature={signature}
-          onNotes={setNotes}
-          onSerial={setSerial}
-          onSignature={setSignature}
-          onOnSite={() =>
-            act({ action: "onsite", kind: "outage", targetId: assigned.id })
-          }
-          onComplete={() =>
-            act({
-              action: "complete",
-              kind: "outage",
-              targetId: assigned.id,
-              notes,
-              serialNumber: serial,
-              dataUri: signature,
-            })
-          }
-        />
+        <>
+          <div className="border-primary/40 bg-primary/10 mt-4 rounded-xl border px-3 py-2 text-xs">
+            <div className="font-medium text-primary">
+              Control room assigned this job to you
+            </div>
+            <div className="text-muted-foreground mt-0.5">
+              {assigned.address}. The resident is tracking {crew?.callsign ?? "your van"}{" "}
+              live on their map — drive, then log On Site.
+            </div>
+          </div>
+          <JobCard
+            incident={assigned}
+            notes={notes}
+            serial={serial}
+            signature={signature}
+            onNotes={setNotes}
+            onSerial={setSerial}
+            onSignature={setSignature}
+            onOnSite={() =>
+              act({ action: "onsite", kind: "outage", targetId: assigned.id })
+            }
+            onComplete={() =>
+              act({
+                action: "complete",
+                kind: "outage",
+                targetId: assigned.id,
+                notes,
+                serialNumber: serial,
+                dataUri: signature,
+              })
+            }
+          />
+        </>
       ) : (
         <div className="mt-4 space-y-2">
           <div className="text-sm font-medium">Unassigned faults near you</div>

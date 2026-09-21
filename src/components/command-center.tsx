@@ -16,7 +16,14 @@ import {
   relativeMinutes,
 } from "@/lib/format";
 import { usePlatform, postJson } from "@/lib/use-platform";
-import type { MasterIncident, RevenueInvestigation } from "@/lib/types";
+import { recommendCrews } from "@/lib/engines/dispatch";
+import type {
+  DispatchRecommendation,
+  FieldCrew,
+  MasterIncident,
+  RevenueInvestigation,
+  User,
+} from "@/lib/types";
 
 export function CommandCenter() {
   const { snapshot, roi, liveEvent, error } = usePlatform();
@@ -73,7 +80,7 @@ export function CommandCenter() {
           <Kpi label="Avg time to send a crew" value={formatMinutes(roi.mttdMinutes)} hint="MTTD — first report to dispatch" />
         </div>
         <MapLegend />
-        {liveEvent ? (
+        {liveEvent && liveEvent.type !== "crew.gps" ? (
           <div className="absolute right-3 bottom-14 z-[400] max-w-xs rounded-lg border border-primary/30 bg-background/90 px-3 py-2 text-xs shadow-lg backdrop-blur">
             <div className="text-[10px] tracking-wide text-primary uppercase">
               Live update
@@ -175,6 +182,8 @@ export function CommandCenter() {
           <DetailPane
             incident={selectedIncident}
             investigation={selectedInv}
+            crews={snapshot.crews}
+            users={snapshot.users}
             reportCount={
               selectedIncident
                 ? snapshot.reports.filter(
@@ -435,17 +444,60 @@ function InvestigationRow({
 function DetailPane({
   incident,
   investigation,
+  crews,
+  users,
   reportCount,
 }: {
   incident?: MasterIncident;
   investigation?: RevenueInvestigation;
+  crews: FieldCrew[];
+  users: User[];
   reportCount: number;
 }) {
-  async function dispatch(kind: "outage" | "investigation", targetId: string) {
-    await postJson("/api/dispatch", { kind, targetId });
+  const [busyCrew, setBusyCrew] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function assign(
+    kind: "outage" | "investigation",
+    targetId: string,
+    crewId?: string,
+  ) {
+    setBusyCrew(crewId ?? "nearest");
+    setMessage(null);
+    try {
+      const result = await postJson<{
+        ok?: boolean;
+        error?: string;
+        recommendation?: DispatchRecommendation;
+      }>("/api/dispatch", { kind, targetId, crewId });
+      if (result.error || result.ok === false) {
+        setMessage(result.error ?? "Dispatch failed.");
+        return;
+      }
+      const rec = result.recommendation;
+      setMessage(
+        rec
+          ? `${rec.callsign} has the job now · ${rec.technicianName} · ${rec.etaMinutes} min. The resident is tracking the van live.`
+          : "Job assigned. The resident can track the technician live.",
+      );
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Dispatch failed.");
+    } finally {
+      setBusyCrew(null);
+    }
   }
 
   if (incident) {
+    const recs = recommendCrews(crews, users, incident.location, "outage", 8);
+    const assigned = crews.find((c) => c.id === incident.assignedCrewId);
+    const assignedName = assigned
+      ? (users.find((u) => u.id === assigned.userId)?.fullName ?? assigned.callsign)
+      : null;
+    const canAssign =
+      incident.status === "open" ||
+      incident.status === "clustered" ||
+      incident.status === "dispatched" ||
+      incident.status === "en_route";
     return (
       <div className="border-t border-border p-3 text-xs">
         <div className="font-medium">{incident.address}</div>
@@ -464,37 +516,58 @@ function DetailPane({
             Technician signed off. The household must tap Confirm restored (or Still no
             power) before this ticket closes.
           </div>
-        ) : incident.status === "open" || incident.status === "clustered" ? (
-          <Button
-            size="sm"
-            className="mt-2"
-            onClick={() => dispatch("outage", incident.id)}
-          >
-            Dispatch nearest technician
-          </Button>
-        ) : (
+        ) : assigned ? (
           <div className="text-primary mt-2">
-            {incidentStatusLabel(incident.status)}
+            {assignedName} ({assigned.callsign}) has this job. The resident is tracking
+            the van live on their map.
           </div>
-        )}
+        ) : null}
+        {canAssign ? (
+          <AssignCrewList
+            recs={recs}
+            assignedCrewId={incident.assignedCrewId}
+            busyCrew={busyCrew}
+            nearestLabel="Assign nearest technician"
+            onNearest={() => assign("outage", incident.id)}
+            onAssign={(crewId) => assign("outage", incident.id, crewId)}
+          />
+        ) : incident.status === "on_site" ? (
+          <div className="text-primary mt-2">Technician is on site.</div>
+        ) : null}
+        {message ? <p className="text-muted-foreground mt-2">{message}</p> : null}
       </div>
     );
   }
 
   if (investigation) {
+    const recs = recommendCrews(
+      crews,
+      users,
+      investigation.location,
+      "investigation",
+      8,
+    );
+    const assigned = crews.find((c) => c.id === investigation.assignedCrewId);
+    const canAssign =
+      investigation.status === "flagged" ||
+      investigation.status === "assigned" ||
+      investigation.status === "en_route";
     return (
       <div className="border-t border-border p-3 text-xs">
         <div className="font-medium">{investigation.address}</div>
         <div className="text-muted-foreground mt-1">{investigation.notes}</div>
-        {investigation.status === "flagged" ? (
-          <Button
-            size="sm"
-            className="mt-2"
-            onClick={() => dispatch("investigation", investigation.id)}
-          >
-            Dispatch revenue inspector
-          </Button>
-        ) : (
+        {assigned ? (
+          <div className="text-gold mt-2">
+            {assigned.callsign} is on this case · {investigation.status.replaceAll("_", " ")}
+            {investigation.fineAmountZar
+              ? ` · ${formatZar(
+                  investigation.fineAmountZar +
+                    investigation.backbillZar +
+                    investigation.penaltyZar,
+                )}`
+              : ""}
+          </div>
+        ) : investigation.status !== "flagged" ? (
           <div className="text-gold mt-2">
             {investigation.status.replaceAll("_", " ")}
             {investigation.fineAmountZar
@@ -505,10 +578,82 @@ function DetailPane({
                 )}`
               : ""}
           </div>
-        )}
+        ) : null}
+        {canAssign ? (
+          <AssignCrewList
+            recs={recs}
+            assignedCrewId={investigation.assignedCrewId}
+            busyCrew={busyCrew}
+            nearestLabel="Assign nearest inspector"
+            onNearest={() => assign("investigation", investigation.id)}
+            onAssign={(crewId) => assign("investigation", investigation.id, crewId)}
+          />
+        ) : null}
+        {message ? <p className="text-muted-foreground mt-2">{message}</p> : null}
       </div>
     );
   }
 
   return null;
+}
+
+function AssignCrewList({
+  recs,
+  assignedCrewId,
+  busyCrew,
+  nearestLabel,
+  onNearest,
+  onAssign,
+}: {
+  recs: DispatchRecommendation[];
+  assignedCrewId: string | null;
+  busyCrew: string | null;
+  nearestLabel: string;
+  onNearest: () => void;
+  onAssign: (crewId: string) => void;
+}) {
+  return (
+    <div className="mt-2 space-y-1.5">
+      <div className="text-muted-foreground text-[10px] tracking-wide uppercase">
+        Assign this job — technician gets it immediately, resident tracks live
+      </div>
+      {recs.length === 0 ? (
+        <p className="text-muted-foreground">No matching crew on duty.</p>
+      ) : (
+        recs.map((rec) => {
+          const mine = rec.crewId === assignedCrewId;
+          return (
+            <Button
+              key={rec.crewId}
+              size="sm"
+              variant={mine ? "secondary" : "outline"}
+              className="h-auto w-full justify-between gap-2 py-1.5 text-left whitespace-normal"
+              disabled={busyCrew !== null || mine}
+              onClick={() => onAssign(rec.crewId)}
+            >
+              <span>
+                {mine ? "Assigned · " : "Assign "}
+                {rec.callsign}
+                <span className="text-muted-foreground mt-0.5 block text-[10px] font-normal">
+                  {rec.technicianName} · {rec.etaMinutes} min ·{" "}
+                  {Math.round(rec.distanceM / 100) / 10} km
+                  {rec.queueSize ? ` · queue ${rec.queueSize}` : ""}
+                </span>
+              </span>
+            </Button>
+          );
+        })
+      )}
+      {!assignedCrewId ? (
+        <Button
+          size="sm"
+          className="w-full"
+          disabled={busyCrew !== null}
+          onClick={onNearest}
+        >
+          {nearestLabel}
+        </Button>
+      ) : null}
+    </div>
+  );
 }

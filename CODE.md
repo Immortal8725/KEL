@@ -62,7 +62,9 @@ These rows sit in `store.users` after boot or demo reset.
 
 - Pick a fault chip (`OUTAGE_REPORT_OPTIONS`, including **Other**) or **Anonymous tip** (`TIP_REPORT_OPTIONS`).  
 - `POST /api/reports` — outage uses his account + phone; tip sets name `"Anonymous tip"` and **null phone / account**.  
-- See open tickets in his suburb; get SSE-backed notices: technician on site, technician finished.  
+- See open tickets in his suburb. Seed includes **TSH-OUT-2026-0194** waiting for dispatch, plus a finished job he can confirm.  
+- The moment Thandiwe assigns a crew, `TrackLiveMap` shows the van moving toward his meter (Bolt-style GPS lerp every 1.6 s via `crew.gps` SSE).  
+- Notices: `dispatch.assigned`, `crew.arrived`, technician on site, technician finished.  
 - `confirm` / `dispute` on `/api/field/action` → `residentConfirm` (ticket `closed`) or `residentDispute` (ticket `open` again).
 
 He cannot open `/ops`, `/audit`, `/tech`, or `/inspect` — `AppShell` bounces him home.
@@ -79,7 +81,8 @@ He cannot open `/ops`, `/audit`, `/tech`, or `/inspect` — `AppShell` bounces h
 
 - See the live map (outage circles, gold diamonds, Tech / Inspector vans, 500 m ring). Map key starts **minimized**.  
 - Queue: needs a crew / in the field / waiting for resident confirm / revenue jobs.  
-- `POST /api/dispatch` — nearest crew of the right specialisation (`src/lib/engines/dispatch.ts`).  
+- Ticket detail lists **named crews** (`Assign MT-12 Mamelodi · 8 min`). `POST /api/dispatch` with `crewId` puts that job on the technician **immediately**; the household tracks the van.  
+- Nearest-crew shortcut still uses `recommend_crew()` (`src/lib/engines/dispatch.ts`).  
 - Run scripted acts via `POST /api/demo/step` (cluster, anomaly scan, inspector path, reset).  
 - Read the plain-language audit diary and ZAR ROI.
 
@@ -96,7 +99,8 @@ Audit actor for assignments is `usr_thandiwe` (`DISPATCHER_ASSIGNED_CREW`).
 
 **What the code lets him do**
 
-- Claim unassigned **maintenance** incidents (not `izinyoka_tip`).  
+- The moment a dispatcher (or he himself) assigns `crew_mt_mamelodi`, the job is his — no extra accept step.  
+- Banner: control room assigned the job; the resident is tracking the van live.  
 - `onsite` → `field.onsite` (resident is notified).  
 - `complete` → ticket `resolved`, crew `available`, event `incident.resolved` (resident must still confirm).  
 - Notes, serial, signature hashed as `TECHNICIAN_WORK_COMPLETED`.
@@ -153,6 +157,8 @@ Inspector on `crew_rp_west` (**RP-01 West**). Owner of the **already closed** At
 | `crew_rp_west` | RP-01 West | `usr_pieter` | `revenue_protection` | available (closed case still referenced) |
 
 Dispatch will not send a `maintenance` van to an investigation, or an RP van to a cable joint — `pickBestCrew` filters on `specialization`.
+
+Live technician GPS: `startChase` in `src/lib/store.ts` lerps the van toward the ticket every 1.6 s and emits quiet `crew.gps` events. The resident map (`TrackLiveMap`) and dispatcher map both subscribe via SSE.
 
 ---
 

@@ -76,7 +76,10 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         snapshot: payload.snapshot ?? prev.snapshot,
         roi: payload.roi ?? prev.roi,
         chain: payload.chain ?? prev.chain,
-        liveEvent: payload.event ?? prev.liveEvent,
+        liveEvent:
+          payload.event?.type === "crew.gps"
+            ? prev.liveEvent
+            : (payload.event ?? prev.liveEvent),
         error: null,
       }));
     };

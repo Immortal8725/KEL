@@ -47,7 +47,15 @@ export function etaMinutes(distanceM: number): number {
   return Math.max(4, Math.round((distanceM / 1000 / 32) * 60 + 3));
 }
 
+export function lerpPoint(from: GeoPoint, to: GeoPoint, t: number): GeoPoint {
+  const clamped = Math.min(1, Math.max(0, t));
+  return {
+    lon: from.lon + (to.lon - from.lon) * clamped,
+    lat: from.lat + (to.lat - from.lat) * clamped,
+  };
+}
+
 export function formatKm(metres: number): string {
-  if (metres < 1000) return `${Math.round(metres)} m`;
-  return `${(metres / 1000).toFixed(1)} km`;
+  if (metres < 950) return `${Math.round(metres)} m`;
+  return `${(metres / 1000).toFixed(metres < 10000 ? 1 : 0)} km`;
 }

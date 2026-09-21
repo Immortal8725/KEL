@@ -7,8 +7,11 @@ import { evidenceSvg } from "@/lib/evidence";
 import { classificationLabel, relativeMinutes } from "@/lib/format";
 import { postJson, usePlatform } from "@/lib/use-platform";
 import { useSession } from "@/lib/use-session";
-import { etaMinutes, distanceMetres } from "@/lib/geo";
 import { OUTAGE_REPORT_OPTIONS, TIP_REPORT_OPTIONS } from "@/lib/report-options";
+import {
+  TrackLiveMap,
+  technicianNameForCrew,
+} from "@/components/track-live-map";
 import type { IngestReportInput, InvestigationType, OutageClassification } from "@/lib/types";
 
 export function ResidentPortal() {
@@ -51,6 +54,7 @@ export function ResidentPortal() {
           (e.type === "field.onsite" ||
             e.type === "incident.resolved" ||
             e.type === "dispatch.assigned" ||
+            e.type === "crew.arrived" ||
             e.type === "incident.resident_confirmed" ||
             e.type === "incident.resident_dispute") &&
           (!e.entityId || suburbIncidentIds.has(e.entityId)),
@@ -165,6 +169,7 @@ export function ResidentPortal() {
     "field.onsite",
     "incident.resolved",
     "dispatch.assigned",
+    "crew.arrived",
     "incident.resident_confirmed",
     "incident.resident_dispute",
   ]);
@@ -204,9 +209,6 @@ export function ResidentPortal() {
         ) : (
           localIncidents.map((incident) => {
             const crew = snapshot?.crews.find((c) => c.id === incident.assignedCrewId);
-            const eta = crew
-              ? etaMinutes(distanceMetres(crew.location, incident.location))
-              : null;
             const techDone = incident.status === "resolved";
             return (
               <div key={incident.id} className="rounded-xl border border-border bg-card p-4">
@@ -217,19 +219,21 @@ export function ResidentPortal() {
                   {incident.affectedHouseholds} households ·{" "}
                   {incident.status.replaceAll("_", " ")}
                 </div>
-                {incident.status === "on_site" ? (
-                  <div className="text-primary mt-2 text-sm font-medium">
-                    Technician has logged on site
-                    {crew ? ` · ${crew.callsign}` : ""}. Stay near the meter if you can.
-                  </div>
-                ) : crew && !techDone ? (
-                  <div className="text-primary mt-2 text-sm font-medium">
-                    {crew.callsign} en route
-                    {eta ? ` · ETA ${eta} min` : ""}
+                {crew && !techDone ? (
+                  <div className="mt-3">
+                    <TrackLiveMap
+                      incident={incident}
+                      crew={crew}
+                      technicianName={technicianNameForCrew(
+                        crew,
+                        snapshot?.users ?? [],
+                      )}
+                    />
                   </div>
                 ) : !techDone ? (
                   <div className="text-muted-foreground mt-2 text-xs">
-                    Waiting for dispatch · reported {relativeMinutes(incident.firstReportedAt)}
+                    Waiting for a dispatcher to assign a technician · reported{" "}
+                    {relativeMinutes(incident.firstReportedAt)}
                   </div>
                 ) : null}
 

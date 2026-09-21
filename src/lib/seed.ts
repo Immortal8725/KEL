@@ -398,6 +398,25 @@ export function seedPlatform(): PlatformSnapshot {
       firstReportedAt: mamOpened,
       lastActivityAt: mamResolved,
     },
+    {
+      id: "inc_mam_live",
+      reference: "TSH-OUT-2026-0194",
+      classification: "cable_fault",
+      status: "open",
+      location: pt(28.3952, -25.7241),
+      address: "9 Tsamaya Road, Mamelodi Ext 11",
+      suburb: "Mamelodi",
+      feederId: "fdr_mam_12",
+      affectedHouseholds: 22,
+      criticalInfrastructure: false,
+      priorityScore: computePriorityScore(22, false, minutesAgo(18, T0), T0),
+      assignedCrewId: null,
+      dispatchedAt: null,
+      onSiteAt: null,
+      resolvedAt: null,
+      firstReportedAt: minutesAgo(18, T0),
+      lastActivityAt: minutesAgo(18, T0),
+    },
   ];
 
   const reports: OutageReport[] = [
@@ -409,6 +428,17 @@ export function seedPlatform(): PlatformSnapshot {
     rpt("inc_north_lights", "3058810021", "Ward 5 office", pt(28.1762, -25.6794), "President Steyn Street", "streetlight", "walk_in", northOpened, null),
     rpt("inc_hat_done", "3081120004", "Campus protection", pt(28.2376, -25.7472), "Festival Street, Hatfield", "voltage_fluctuation", "call_centre", hatResolvedOpen, null),
     rpt("inc_mam_done", "3218840441", "Sibusiso Mabena", pt(28.394, -25.7234), "12 Tsamaya Road, Mamelodi Ext 11", "no_power", "whatsapp", mamOpened, "Whole street dark after a bang."),
+    rpt(
+      "inc_mam_live",
+      "3218840441",
+      "Sibusiso Mabena",
+      pt(28.3952, -25.7241),
+      "9 Tsamaya Road, Mamelodi Ext 11",
+      "cable_fault",
+      "app",
+      minutesAgo(18, T0),
+      "No power on this side of Tsamaya after the cable popped.",
+    ),
   ];
 
   const investigations: RevenueInvestigation[] = [
@@ -649,6 +679,17 @@ export function seedPlatform(): PlatformSnapshot {
       severity: "success",
       entityType: "master_incident",
       entityId: "inc_mam_done",
+    },
+    {
+      id: "evt_seed_mam_wait",
+      type: "incident.opened",
+      title: "Waiting for a technician · Mamelodi Ext 11",
+      detail:
+        "Sibusiso reported TSH-OUT-2026-0194. Dispatcher must assign a van — then the household tracks it live.",
+      at: minutesAgo(18, T0),
+      severity: "warn",
+      entityType: "master_incident",
+      entityId: "inc_mam_live",
     },
   ];
 

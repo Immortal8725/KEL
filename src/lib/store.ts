@@ -15,10 +15,17 @@ import {
   estimateBackbillZar,
 } from "./engines/anomaly";
 import { appendAudit, verifyAuditChain } from "./engines/audit";
-import { pickBestCrew, recommendCrews, type JobKind } from "./engines/dispatch";
+import {
+  pickBestCrew,
+  recommendCrews,
+  recommendationForCrew,
+  specializationForJob,
+  type JobKind,
+} from "./engines/dispatch";
 import { refreshIncidentPriority } from "./engines/priority";
 import { computeRoi } from "./engines/roi";
 import { ingestReport } from "./engines/spatial";
+import { distanceMetres, etaMinutes, lerpPoint } from "./geo";
 import { hoursAgo, newId, nowIso } from "./id";
 import { seedPlatform } from "./seed";
 import type {
@@ -26,6 +33,7 @@ import type {
   DispatchRecommendation,
   EvidencePhoto,
   FieldCrew,
+  GeoPoint,
   IngestReportInput,
   InvestigationStatus,
   InvestigationType,
@@ -53,12 +61,14 @@ class GridPulseStore {
   events: LiveEvent[] = [];
   weights: PriorityWeights = { ...DEFAULT_WEIGHTS };
   listeners = new Set<(event: LiveEvent, snapshot: PlatformSnapshot) => void>();
+  private chaseTimers = new Map<string, ReturnType<typeof setInterval>>();
 
   constructor() {
     this.reset();
   }
 
   reset() {
+    this.stopAllChases();
     const seeded = seedPlatform();
     this.users = seeded.users;
     this.crews = seeded.crews;
@@ -77,6 +87,7 @@ class GridPulseStore {
       detail: "Baseline Tshwane grid state loaded for the prototype.",
       severity: "info",
     });
+    this.bootChases();
   }
 
   snapshot(): PlatformSnapshot {
@@ -281,20 +292,37 @@ class GridPulseStore {
     const target = this.jobLocation(kind, targetId);
     if (!target) throw new Error("Unknown job");
 
-    const pick: DispatchRecommendation | null = crewId
-      ? recommendCrews(this.crews, this.users, target.location, kind, 20).find(
-          (c) => c.crewId === crewId,
-        ) ?? null
-      : pickBestCrew(this.crews, this.users, target.location, kind);
+    const spec = specializationForJob(kind);
+    let pick: DispatchRecommendation | null = null;
+    if (crewId) {
+      const chosen = this.crews.find((c) => c.id === crewId);
+      if (!chosen) throw new Error("Unknown crew");
+      if (chosen.specialization !== spec) {
+        throw new Error("That crew cannot take this job type");
+      }
+      if (chosen.status === "off_duty") throw new Error("Crew is off duty");
+      pick = recommendationForCrew(chosen, this.users, target.location);
+    } else {
+      pick = pickBestCrew(this.crews, this.users, target.location, kind);
+    }
 
     if (!pick) throw new Error("No available crew matches this specialisation");
+
+    const prevCrewId =
+      kind === "outage"
+        ? this.incidents.find((i) => i.id === targetId)?.assignedCrewId
+        : this.investigations.find((i) => i.id === targetId)?.assignedCrewId;
+    if (prevCrewId && prevCrewId !== pick.crewId) {
+      this.releaseCrew(prevCrewId, { kind, targetId });
+    }
 
     const crewIdx = this.crews.findIndex((c) => c.id === pick.crewId);
     const crew = this.crews[crewIdx];
     this.crews[crewIdx] = {
       ...crew,
       status: "en_route",
-      activeQueueSize: crew.activeQueueSize + 1,
+      activeQueueSize:
+        prevCrewId === pick.crewId ? crew.activeQueueSize : crew.activeQueueSize + 1,
     };
 
     const dispatcher = this.users.find((u) => u.role === "dispatcher")!;
@@ -341,10 +369,16 @@ class GridPulseStore {
     this.emit({
       type: "dispatch.assigned",
       title: `${pick.callsign} dispatched`,
-      detail: `${pick.technicianName} · ${pick.etaMinutes} min ETA · ${pick.specialization === "revenue_protection" ? "Revenue Protection" : "Maintenance"}`,
+      detail: `${pick.technicianName} · ${pick.etaMinutes} min ETA · job assigned · resident can track live`,
       severity: "info",
       entityType: kind === "outage" ? "master_incident" : "revenue_investigation",
       entityId: targetId,
+    });
+
+    this.startChase(pick.crewId, target.location, {
+      entityType: kind === "outage" ? "master_incident" : "revenue_investigation",
+      entityId: targetId,
+      callsign: pick.callsign,
     });
 
     return { recommendation: pick, kind, targetId };
@@ -359,6 +393,7 @@ class GridPulseStore {
     if (crewId) {
       const idx = this.crews.findIndex((c) => c.id === crewId);
       if (idx >= 0) this.crews[idx] = { ...this.crews[idx], status: "on_site" };
+      this.stopChase(crewId);
     }
 
     if (kind === "outage") {
@@ -517,6 +552,7 @@ class GridPulseStore {
       lastActivityAt: now,
     };
     if (incident.assignedCrewId) {
+      this.stopChase(incident.assignedCrewId);
       const cIdx = this.crews.findIndex((c) => c.id === incident.assignedCrewId);
       if (cIdx >= 0) {
         const crew = this.crews[cIdx];
@@ -694,6 +730,17 @@ class GridPulseStore {
       lastGpsAt: nowIso(),
       status: status ?? this.crews[idx].status,
     };
+    this.emit(
+      {
+        type: "crew.gps",
+        title: this.crews[idx].callsign,
+        detail: "Live GPS",
+        severity: "info",
+        entityType: "field_crew",
+        entityId: crewId,
+      },
+      false,
+    );
   }
 
   roi() {
@@ -747,6 +794,7 @@ class GridPulseStore {
 
   private emit(
     event: Omit<LiveEvent, "id" | "at"> & { at?: string },
+    recordInFeed = true,
   ) {
     const live: LiveEvent = {
       id: newId("evt"),
@@ -758,12 +806,132 @@ class GridPulseStore {
       entityType: event.entityType,
       entityId: event.entityId,
     };
-    this.events.push(live);
-    if (this.events.length > MAX_EVENTS) {
-      this.events.splice(0, this.events.length - MAX_EVENTS);
+    if (recordInFeed) {
+      this.events.push(live);
+      if (this.events.length > MAX_EVENTS) {
+        this.events.splice(0, this.events.length - MAX_EVENTS);
+      }
     }
     const snapshot = this.snapshot();
-    for (const listener of this.listeners) listener(live, snapshot);
+    for (const fn of this.listeners) fn(live, snapshot);
+  }
+
+  private bootChases() {
+    for (const incident of this.incidents) {
+      if (
+        incident.assignedCrewId &&
+        (incident.status === "en_route" || incident.status === "dispatched")
+      ) {
+        const crew = this.crews.find((c) => c.id === incident.assignedCrewId);
+        this.startChase(incident.assignedCrewId, incident.location, {
+          entityType: "master_incident",
+          entityId: incident.id,
+          callsign: crew?.callsign ?? "Crew",
+        });
+      }
+    }
+  }
+
+  private startChase(
+    crewId: string,
+    dest: GeoPoint,
+    meta: { entityType: string; entityId: string; callsign: string },
+  ) {
+    this.stopChase(crewId);
+    const tick = () => {
+      const idx = this.crews.findIndex((c) => c.id === crewId);
+      if (idx < 0) {
+        this.stopChase(crewId);
+        return;
+      }
+      const crew = this.crews[idx];
+      if (crew.status === "on_site" || crew.status === "available" || crew.status === "off_duty") {
+        this.stopChase(crewId);
+        return;
+      }
+      const remaining = distanceMetres(crew.location, dest);
+      if (remaining < 80) {
+        this.crews[idx] = {
+          ...crew,
+          location: dest,
+          lastGpsAt: nowIso(),
+        };
+        this.stopChase(crewId);
+        this.emit({
+          type: "crew.arrived",
+          title: `${meta.callsign} is at your meter`,
+          detail: "The technician has arrived. They will log On Site shortly.",
+          severity: "success",
+          entityType: meta.entityType,
+          entityId: meta.entityId,
+        });
+        return;
+      }
+      const step = Math.min(0.16, 120 / remaining);
+      const jitter = () => (Math.random() - 0.5) * 0.00007;
+      const next = lerpPoint(crew.location, dest, step);
+      this.crews[idx] = {
+        ...crew,
+        location: { lon: next.lon + jitter(), lat: next.lat + jitter() },
+        lastGpsAt: nowIso(),
+        status: "en_route",
+      };
+      this.emit(
+        {
+          type: "crew.gps",
+          title: `${meta.callsign} moving`,
+          detail: `${Math.round(remaining)} m · ETA ${etaMinutes(remaining)} min`,
+          severity: "info",
+          entityType: meta.entityType,
+          entityId: meta.entityId,
+        },
+        false,
+      );
+    };
+    this.chaseTimers.set(crewId, setInterval(tick, 1600));
+    tick();
+  }
+
+  private stopChase(crewId: string) {
+    const timer = this.chaseTimers.get(crewId);
+    if (timer) {
+      clearInterval(timer);
+      this.chaseTimers.delete(crewId);
+    }
+  }
+
+  private stopAllChases() {
+    for (const id of this.chaseTimers.keys()) this.stopChase(id);
+  }
+
+  private releaseCrew(
+    crewId: string,
+    except?: { kind: JobKind; targetId: string },
+  ) {
+    this.stopChase(crewId);
+    const idx = this.crews.findIndex((c) => c.id === crewId);
+    if (idx < 0) return;
+    const crew = this.crews[idx];
+    const stillBusy =
+      this.incidents.some(
+        (i) =>
+          i.assignedCrewId === crewId &&
+          !(except?.kind === "outage" && except.targetId === i.id) &&
+          i.status !== "resolved" &&
+          i.status !== "closed",
+      ) ||
+      this.investigations.some(
+        (i) =>
+          i.assignedCrewId === crewId &&
+          !(except?.kind === "investigation" && except.targetId === i.id) &&
+          i.status !== "closed_recovered" &&
+          i.status !== "closed_no_finding",
+      );
+    this.crews[idx] = {
+      ...crew,
+      status: stillBusy ? crew.status : "available",
+      activeQueueSize: Math.max(0, crew.activeQueueSize - 1),
+    };
   }
 }
 

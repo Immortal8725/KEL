@@ -9,7 +9,8 @@
  *   score = (distance_km * 12) + (active_queue_size * 18)
  *
  * Only crews whose specialisation matches the job are considered. Off-duty
- * crews are excluded. Equivalent SQL: `recommend_crew()` in db/schema.sql.
+ * crews are excluded. Dispatcher can pin a named van; that job lands on the
+ * technician immediately. Equivalent SQL: `recommend_crew()` in db/schema.sql.
  */
 
 import { distanceMetres, etaMinutes } from "../geo";
@@ -20,6 +21,26 @@ import type {
   Specialization,
   User,
 } from "../types";
+
+export function recommendationForCrew(
+  crew: FieldCrew,
+  users: User[],
+  jobLocation: GeoPoint,
+): DispatchRecommendation {
+  const distanceM = distanceMetres(crew.location, jobLocation);
+  const score =
+    Math.round(((distanceM / 1000) * 12 + crew.activeQueueSize * 18) * 100) / 100;
+  return {
+    crewId: crew.id,
+    callsign: crew.callsign,
+    technicianName: users.find((u) => u.id === crew.userId)?.fullName ?? crew.callsign,
+    specialization: crew.specialization,
+    distanceM: Math.round(distanceM),
+    queueSize: crew.activeQueueSize,
+    score,
+    etaMinutes: etaMinutes(distanceM),
+  };
+}
 
 export type JobKind = "outage" | "investigation";
 
@@ -35,27 +56,11 @@ export function recommendCrews(
   limit = 5,
 ): DispatchRecommendation[] {
   const spec = specializationForJob(kind);
-  const userById = new Map(users.map((u) => [u.id, u]));
 
   return crews
     .filter((c) => c.specialization === spec)
-    .filter((c) => c.status === "available" || c.status === "en_route")
-    .map((crew) => {
-      const distanceM = distanceMetres(crew.location, jobLocation);
-      const score =
-        Math.round(((distanceM / 1000) * 12 + crew.activeQueueSize * 18) * 100) /
-        100;
-      return {
-        crewId: crew.id,
-        callsign: crew.callsign,
-        technicianName: userById.get(crew.userId)?.fullName ?? crew.callsign,
-        specialization: crew.specialization,
-        distanceM: Math.round(distanceM),
-        queueSize: crew.activeQueueSize,
-        score,
-        etaMinutes: etaMinutes(distanceM),
-      };
-    })
+    .filter((c) => c.status !== "off_duty")
+    .map((crew) => recommendationForCrew(crew, users, jobLocation))
     .sort((a, b) => a.score - b.score || a.distanceM - b.distanceM)
     .slice(0, limit);
 }

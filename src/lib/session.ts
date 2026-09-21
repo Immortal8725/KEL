@@ -27,8 +27,8 @@ export const PERSONAS: DemoPersona[] = [
     suburb: "Mamelodi",
     accountNumber: "3218840441",
     blurb:
-      "Pick what is wrong from a list (or Other), send an anonymous tip, get notified when the technician logs and when the job is done, then confirm restore.",
-    duties: ["Report dropdown", "Anonymous Other", "Confirm restore"],
+      "Report a fault, wait for dispatch, then track the technician live on a map (Bolt-style). Confirm when power is back.",
+    duties: ["Report", "Live track van", "Confirm restore"],
   },
   {
     id: "usr_thandiwe",
@@ -38,8 +38,8 @@ export const PERSONAS: DemoPersona[] = [
     email: "t.nkosi@tshwane.gov.za",
     home: "/ops",
     blurb:
-      "Live map with a labelled legend, clustered tickets, dispatch the right crew, and wait for the resident to confirm restore.",
-    duties: ["Map legend", "Work queue", "Assign crews"],
+      "Assign a named technician to the resident’s ticket. The job lands on that handset immediately and the household tracks the van live.",
+    duties: ["Assign technician", "Live map", "Work queue"],
   },
   {
     id: "usr_sipho",
@@ -49,8 +49,9 @@ export const PERSONAS: DemoPersona[] = [
     email: "s.dlamini@tshwane.gov.za",
     home: "/tech",
     crewId: "crew_mt_mamelodi",
-    blurb: "Repair jobs, En Route / On Site / Resolved, closure photos and serials.",
-    duties: ["Navigate", "Status GPS", "Close with proof"],
+    blurb:
+      "The moment control room assigns your crew, the job appears here and the resident tracks your GPS.",
+    duties: ["Assigned jobs", "On site", "Sign off"],
   },
   {
     id: "usr_nomsa",
