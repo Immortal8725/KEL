@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PERSONAS, DEMO_PASSWORD, useSession } from "@/lib/use-session";
 import { goReplace } from "@/lib/hard-nav";
+import { PRODUCT_FULL, PRODUCT_NAME, PRODUCT_BYLINE } from "@/lib/brand";
 
 export function LoginScreen() {
   const { login, loginWithPassword } = useSession();
@@ -31,16 +32,16 @@ export function LoginScreen() {
     <div className="min-h-dvh px-4 py-10">
       <div className="mx-auto max-w-5xl">
         <div className="text-[10px] tracking-[0.24em] text-primary uppercase">
-          City of Tshwane · Hackathon demo
+          City of Tshwane · {PRODUCT_NAME} {PRODUCT_BYLINE}
         </div>
         <h1 className="font-heading mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-          Sign in to GridPulse
+          Sign in to {PRODUCT_NAME}
         </h1>
         <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
-          Fake municipal login — pick a persona. Each role opens a different
-          product: resident channel, control-room ops, technician PWA, or
-          revenue-protection audit kit. Password for typed login is{" "}
-          <code className="text-foreground">gridpulse</code>.
+          {PRODUCT_FULL} — fake municipal login. Pick a persona. Each role
+          opens a different product: resident channel, control-room ops,
+          technician PWA, or revenue-protection audit kit. Password for typed
+          login is <code className="text-foreground">gridpulse</code>.
         </p>
 
         <div className="mt-8 grid gap-3 md:grid-cols-2">

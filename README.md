@@ -1,4 +1,6 @@
-# GridPulse — City of Tshwane
+# ElectroRaid from GridPulse — City of Tshwane
+
+**ElectroRaid** is the municipal outage and revenue-protection product. It is built **from GridPulse** — the spatial clustering, dispatch, Izinyoka, and audit engines in this repo.
 
 Smart outage management and revenue protection for the City of Tshwane. Built as a working prototype for the Tshwane Varsity Hackathon.
 

@@ -1,7 +1,7 @@
 # Visitor Privacy Policy
 
 **Effective:** 21 September 2026  
-**Who this is for:** Anyone who opens the GridPulse URL without being a City employee — residents in the demo, judges, campus visitors, and people who only read the repo.
+**Who this is for:** Anyone who opens the ElectroRaid URL without being a City employee — residents in the demo, judges, campus visitors, and people who only read the repo.
 
 Employees and field crews are covered by the main [Privacy & Cookie Policy](../PRIVACY_POLICY.md) and the [Data Processing Agreement](DATA_PROCESSING_AGREEMENT.md).
 

@@ -1,7 +1,7 @@
 # Dispute Policy
 
 **Effective:** 21 September 2026  
-**Product:** GridPulse
+**Product:** ElectroRaid from GridPulse
 
 This policy explains how to raise a complaint about the prototype, a demo ticket, a simulated fine, or personal information. It does not replace SAPS, NERSA, or the City’s official credit-control by-laws.
 

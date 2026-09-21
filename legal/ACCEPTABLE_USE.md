@@ -1,7 +1,7 @@
 # Acceptable Use Policy
 
 **Effective:** 21 September 2026  
-**Product:** GridPulse
+**Product:** ElectroRaid from GridPulse
 
 This policy sits under the [Terms of Use](../TERMS_OF_USE.md). It applies to every role in [CODE.md](../CODE.md).
 

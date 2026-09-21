@@ -1,4 +1,4 @@
-# CODE.md — every user in GridPulse
+# CODE.md — every user in ElectroRaid from GridPulse
 
 This file is the user catalogue **as the code defines it**, not a marketing org chart.  
 Sources: `src/lib/types.ts`, `src/lib/seed.ts`, `src/lib/session.ts`, `src/lib/store.ts`, `navForRole`, and the four role UIs.
@@ -31,7 +31,7 @@ These rows sit in `store.users` after boot or demo reset.
 
 | `id` | `fullName` | `role` | `employeeNo` | `email` | `phone` | Login? |
 | --- | --- | --- | --- | --- | --- | --- |
-| `usr_system` | GridPulse Engine | `system` | SYS-000 | engine@gridpulse.tshwane.gov.za | — | No |
+| `usr_system` | ElectroRaid Engine | `system` | SYS-000 | engine@gridpulse.tshwane.gov.za | — | No |
 | `usr_sibusiso` | Sibusiso Mabena | `resident` | — | sibusiso@resident.tshwane | +27 82 441 0190 | **Yes** |
 | `usr_thandiwe` | Thandiwe Nkosi | `dispatcher` | COT-4412 | t.nkosi@tshwane.gov.za | +27 12 358 4412 | **Yes** |
 | `usr_sipho` | Sipho Dlamini | `technician` | COT-2281 | s.dlamini@tshwane.gov.za | +27 82 441 2281 | **Yes** |
@@ -122,7 +122,7 @@ He does not issue tamper fines.
 
 ## 4. Users who exist in the store but have no login card
 
-### 4.1 GridPulse Engine — `usr_system`
+### 4.1 ElectroRaid Engine — `usr_system`
 
 Writes `PLATFORM_SEEDED`, `MASTER_INCIDENT_OPENED`, `REPORT_MERGED_INTO_MASTER`, `ANOMALY_ZERO_CONSUMPTION_FLAGGED`.  
 `role: "system"`. Never shown on `/login`.

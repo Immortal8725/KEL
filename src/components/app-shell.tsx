@@ -10,6 +10,7 @@ import { useSession } from "@/lib/use-session";
 import { navForRole } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { go, goReplace } from "@/lib/hard-nav";
+import { PRODUCT_BYLINE, PRODUCT_NAME } from "@/lib/brand";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -49,7 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!ready || !persona) {
     return (
       <div className="text-muted-foreground flex min-h-dvh items-center justify-center text-sm">
-        Opening your GridPulse workspace…
+        Opening your ElectroRaid workspace…
       </div>
     );
   }
@@ -65,7 +66,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             City of Tshwane
           </div>
           <div className="font-heading mt-1 text-lg font-semibold tracking-tight">
-            GridPulse
+            {PRODUCT_NAME}
+          </div>
+          <div className="text-primary mt-0.5 text-[10px] tracking-[0.18em] uppercase">
+            {PRODUCT_BYLINE}
           </div>
           <div className="text-muted-foreground mt-2 text-xs leading-relaxed">
             {persona.title}
@@ -124,7 +128,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="flex items-center justify-between gap-3 border-b border-border/80 px-3 py-2 md:px-5">
           <div className="flex items-center gap-2 md:hidden">
             <Activity className="text-primary size-4" />
-            <span className="font-heading text-sm font-semibold">GridPulse</span>
+            <span className="font-heading text-sm font-semibold">{PRODUCT_NAME}</span>
           </div>
           <div className="text-muted-foreground hidden min-w-0 truncate text-xs md:block">
             Signed in as {persona.name} · {persona.title}

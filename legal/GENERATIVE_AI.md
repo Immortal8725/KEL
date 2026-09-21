@@ -1,11 +1,11 @@
 # Generative AI Notice
 
 **Effective:** 21 September 2026  
-**Product:** GridPulse
+**Product:** ElectroRaid from GridPulse
 
 ## 1. What this product does not do
 
-The running GridPulse app **does not call a generative model** to classify outages, write fines, or decide dispatch.
+The running ElectroRaid app **does not call a generative model** to classify outages, write fines, or decide dispatch.
 
 Routing, clustering, and scoring are deterministic TypeScript:
 
@@ -30,7 +30,7 @@ Dispatchers still assign (or accept a recommendation). Inspectors still tick sea
 
 ## 4. If a future version adds a model
 
-We would update this notice and the Privacy Policy to say: which vendor, which fields leave South Africa, whether prompts include personal information, and how to opt out. Until then, treat GridPulse as **rules + GPS + an audit log**, not as generative AI.
+We would update this notice and the Privacy Policy to say: which vendor, which fields leave South Africa, whether prompts include personal information, and how to opt out. Until then, treat ElectroRaid from GridPulse as **rules + GPS + an audit log**, not as generative AI.
 
 ## 5. Acceptable use of AI around the demo
 

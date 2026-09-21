@@ -1,7 +1,7 @@
 # Data Processing Agreement
 
 **Effective:** 21 September 2026  
-**Product:** GridPulse  
+**Product:** ElectroRaid from GridPulse  
 **Law:** Protection of Personal Information Act 4 of 2013 (POPIA) and, where relevant, the GDPR for any EU-based hosting.
 
 This DPA is a **template for a future production host**. The current prototype processes data only in memory on the machine that runs `next dev` / `next start`.

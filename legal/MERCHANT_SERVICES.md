@@ -1,7 +1,7 @@
 # Merchant Services Agreement
 
 **Effective:** 21 September 2026  
-**Product:** GridPulse  
+**Product:** ElectroRaid from GridPulse  
 **Status:** Demonstration only — no merchant acquirer is connected.
 
 This document describes how **money would** move if the City took GridPulse to production, and what the **prototype actually does**.

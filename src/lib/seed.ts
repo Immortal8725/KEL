@@ -33,7 +33,7 @@ export function seedPlatform(): PlatformSnapshot {
     {
       id: "usr_system",
       employeeNo: "SYS-000",
-      fullName: "GridPulse Engine",
+      fullName: "ElectroRaid Engine",
       email: "engine@gridpulse.tshwane.gov.za",
       phone: null,
       role: "system",

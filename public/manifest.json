@@ -1,7 +1,7 @@
 {
-  "name": "GridPulse",
-  "short_name": "GridPulse",
-  "description": "City of Tshwane smart outage and revenue protection",
+  "name": "ElectroRaid from GridPulse",
+  "short_name": "ElectroRaid",
+  "description": "City of Tshwane smart outage and revenue protection — ElectroRaid from GridPulse",
   "start_url": "/field",
   "display": "standalone",
   "background_color": "#071016",

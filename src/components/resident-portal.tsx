@@ -348,7 +348,7 @@ export function ResidentPortal() {
 
       <div className="mt-6 rounded-2xl border border-border bg-[#0c1f18] p-4">
         <div className="text-[10px] tracking-wide text-[#9ad7b8] uppercase">
-          GridPulse messages
+          ElectroRaid messages
         </div>
         <div className="mt-3 space-y-2">
           {notifications.length === 0 ? (

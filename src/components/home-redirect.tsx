@@ -14,7 +14,7 @@ export function HomeRedirect() {
 
   return (
     <div className="text-muted-foreground flex min-h-dvh items-center justify-center text-sm">
-      Opening GridPulse…
+      Opening ElectroRaid…
     </div>
   );
 }

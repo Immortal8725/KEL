@@ -18,7 +18,7 @@ export function DemoStage() {
         Tshwane Varsity Hackathon
       </div>
       <h1 className="font-heading text-3xl font-semibold tracking-tight">
-        Four-act live demo
+        ElectroRaid · four-act live demo
       </h1>
       <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
         Hit play and watch the same store that powers the command map, the

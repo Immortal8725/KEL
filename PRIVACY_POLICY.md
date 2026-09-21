@@ -1,10 +1,10 @@
 # Privacy & Cookie Policy
 
-**Product:** GridPulse (City of Tshwane outage and revenue-protection prototype)  
+**Product:** ElectroRaid from GridPulse (City of Tshwane outage and revenue-protection prototype)  
 **Effective:** 21 September 2026  
 **Applies to:** `PRIVACY_POLICY.md` — website, resident PWA, dispatcher portal, field apps, and APIs in this repository.
 
-This policy explains what GridPulse collects, why, and how long it stays. It is written for a **hackathon prototype**. Seeded names, phone numbers, prepaid accounts, and GPS points are **representative demo data**, not live City of Tshwane CIS records.
+This policy explains what ElectroRaid from GridPulse collects, why, and how long it stays. It is written for a **hackathon prototype**. Seeded names, phone numbers, prepaid accounts, and GPS points are **representative demo data**, not live City of Tshwane CIS records.
 
 Related documents: [Terms of Use](TERMS_OF_USE.md), [Visitor Privacy](legal/VISITOR_PRIVACY.md), [Event Privacy](legal/EVENT_PRIVACY.md), [Data Processing Agreement](legal/DATA_PROCESSING_AGREEMENT.md).
 
@@ -32,7 +32,7 @@ We do **not** collect payment card numbers, ID numbers, or biometric templates i
 
 ## 3. Cookies and similar storage
 
-GridPulse does **not** set advertising or analytics cookies.
+ElectroRaid does **not** set advertising or analytics cookies.
 
 | Name | Type | Purpose | Duration |
 | --- | --- | --- | --- |
@@ -80,7 +80,7 @@ Field actions and reports append to a SHA-256 hash chain (`src/lib/engines/audit
 
 ## 10. Children
 
-GridPulse is a municipal operations tool. It is not aimed at children under 18. Do not submit a child’s personal information in a tip.
+ElectroRaid is a municipal operations tool. It is not aimed at children under 18. Do not submit a child’s personal information in a tip.
 
 ## 11. Changes
 

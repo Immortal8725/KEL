@@ -1,15 +1,15 @@
 # Terms of Use
 
-**Product:** GridPulse  
+**Product:** ElectroRaid from GridPulse  
 **Effective:** 21 September 2026  
 **Operator (intended):** City of Tshwane  
 **Status:** Hackathon / demonstration prototype — not a live municipal service.
 
-These terms govern use of the GridPulse web app, APIs, and field PWAs in this repository. Related rules: [Acceptable Use](legal/ACCEPTABLE_USE.md), [Privacy & Cookie Policy](PRIVACY_POLICY.md), [Dispute Policy](legal/DISPUTE_POLICY.md), [Generative AI](legal/GENERATIVE_AI.md).
+These terms govern use of the ElectroRaid from GridPulse web app, APIs, and field PWAs in this repository. Related rules: [Acceptable Use](legal/ACCEPTABLE_USE.md), [Privacy & Cookie Policy](PRIVACY_POLICY.md), [Dispute Policy](legal/DISPUTE_POLICY.md), [Generative AI](legal/GENERATIVE_AI.md).
 
-## 1. What GridPulse is
+## 1. What ElectroRaid is
 
-GridPulse is a working prototype of an outage-management and revenue-protection platform. It clusters nearby resident reports (500 m / 2 hours), scores ticket priority, flags prepaid meters with 0 kWh for ≥ 60 days on an ENERGIZED feeder, dispatches maintenance or revenue-protection crews, and writes an append-only audit log.
+ElectroRaid from GridPulse is a working prototype of an outage-management and revenue-protection platform. It clusters nearby resident reports (500 m / 2 hours), scores ticket priority, flags prepaid meters with 0 kWh for ≥ 60 days on an ENERGIZED feeder, dispatches maintenance or revenue-protection crews, and writes an append-only audit log.
 
 It is **not** the City’s official outage line, **not** a payment gateway, and **not** a substitute for 911 / 10111 / the municipal call centre.
 
@@ -29,7 +29,7 @@ You are responsible for what you submit while that persona is selected (reports,
 
 ## 4. Licence to use
 
-We grant you a limited, revocable, non-exclusive right to run and demonstrate the prototype. The City (or the hackathon team) retains rights in the code, design, and name “GridPulse”. You may not sell the demo, scrape seeded accounts for real collections, or present seed fines as enforceable debt.
+We grant you a limited, revocable, non-exclusive right to run and demonstrate the prototype. The City (or the hackathon team) retains rights in the code, design, and names “ElectroRaid” and “GridPulse”. You may not sell the demo, scrape seeded accounts for real collections, or present seed fines as enforceable debt.
 
 ## 5. Your content
 

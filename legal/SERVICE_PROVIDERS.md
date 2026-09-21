@@ -1,7 +1,7 @@
 # Service Providers, Sub-processors, and Affiliates
 
 **Effective:** 21 September 2026  
-**Product:** GridPulse  
+**Product:** ElectroRaid from GridPulse  
 **Related:** [Data Processing Agreement](DATA_PROCESSING_AGREEMENT.md), [Privacy & Cookie Policy](../PRIVACY_POLICY.md)
 
 This list is what the **current prototype** actually talks to, plus who would appear in a City production build.
