@@ -15,7 +15,10 @@ import {
   relativeMinutes,
 } from "@/lib/format";
 import { usePlatform, postJson } from "@/lib/use-platform";
-import { recommendCrews } from "@/lib/engines/dispatch";
+import {
+  recommendCrews,
+  requiredSkillsForJob,
+} from "@/lib/engines/dispatch";
 import { TrackLiveMap } from "@/components/track-live-map";
 import type {
   DispatchRecommendation,
@@ -73,6 +76,7 @@ export function CommandCenter() {
         />
         <div className="pointer-events-none absolute inset-x-3 top-3 z-[400] flex flex-wrap gap-2">
           <Kpi label="Open outages" value={String(roi.openIncidents)} hint="Tickets not yet restored" />
+          <Kpi label="Auto-assigned" value={String(inField.length)} hint="Skill + proximity engine" />
           <Kpi label="Revenue cases" value={String(roi.openInvestigations)} tone="gold" hint="Izinyoka / zero-kWh queue" />
           <Kpi label="Revenue recovered" value={formatZar(roi.recoveredZar)} tone="gold" hint="Fines + back-bill + penalties" />
           <Kpi label="Duplicate vans avoided" value={formatZar(roi.fleetSavingsZar)} hint="500 m merge savings" />
@@ -102,9 +106,9 @@ export function CommandCenter() {
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-2 p-3">
-            <SectionTitle>Needs a crew (open tickets)</SectionTitle>
+            <SectionTitle>Waiting on the engine</SectionTitle>
             {needsCrew.length === 0 ? (
-              <EmptyNote>Every open outage already has a van.</EmptyNote>
+              <EmptyNote>Skill + proximity assigned every open outage.</EmptyNote>
             ) : (
               needsCrew.map((incident) => (
                 <IncidentRow
@@ -480,7 +484,14 @@ function DetailPane({
   }
 
   if (incident) {
-    const recs = recommendCrews(crews, users, incident.location, "outage", 8);
+    const recs = recommendCrews(
+      crews,
+      users,
+      incident.location,
+      "outage",
+      8,
+      requiredSkillsForJob("outage", incident.classification),
+    );
     const assigned = crews.find((c) => c.id === incident.assignedCrewId);
     const assignedName = assigned
       ? (users.find((u) => u.id === assigned.userId)?.fullName ?? assigned.callsign)
@@ -511,8 +522,11 @@ function DetailPane({
         ) : assigned ? (
           <div className="mt-3 space-y-2">
             <div className="text-primary">
-              {assignedName} ({assigned.callsign}) has this job. The resident is tracking
-              the van live on their map.
+              Auto-assigned {assignedName} ({assigned.callsign})
+              {recs.find((r) => r.crewId === assigned.id)
+                ? ` · ${recs.find((r) => r.crewId === assigned.id)?.reason}`
+                : ""}
+              . Household tracks the van live. Override below only if the engine is wrong.
             </div>
             <TrackLiveMap
               incident={incident}
@@ -527,7 +541,7 @@ function DetailPane({
             recs={recs}
             assignedCrewId={incident.assignedCrewId}
             busyCrew={busyCrew}
-            nearestLabel="Assign nearest technician"
+            nearestLabel="Run skill + proximity engine"
             onNearest={() => assign("outage", incident.id)}
             onAssign={(crewId) => assign("outage", incident.id, crewId)}
           />
@@ -546,8 +560,12 @@ function DetailPane({
       investigation.location,
       "investigation",
       8,
+      requiredSkillsForJob("investigation", investigation.type),
     );
     const assigned = crews.find((c) => c.id === investigation.assignedCrewId);
+    const assignedName = assigned
+      ? (users.find((u) => u.id === assigned.userId)?.fullName ?? assigned.callsign)
+      : null;
     const canAssign =
       investigation.status === "flagged" ||
       investigation.status === "assigned" ||
@@ -557,15 +575,20 @@ function DetailPane({
         <div className="font-medium">{investigation.address}</div>
         <div className="text-muted-foreground mt-1">{investigation.notes}</div>
         {assigned ? (
-          <div className="text-gold mt-2">
-            {assigned.callsign} is on this case · {investigation.status.replaceAll("_", " ")}
-            {investigation.fineAmountZar
-              ? ` · ${formatZar(
-                  investigation.fineAmountZar +
-                    investigation.backbillZar +
-                    investigation.penaltyZar,
-                )}`
-              : ""}
+          <div className="mt-3 space-y-2">
+            <div className="text-gold">
+              Auto-assigned {assignedName} ({assigned.callsign})
+              {recs.find((r) => r.crewId === assigned.id)
+                ? ` · ${recs.find((r) => r.crewId === assigned.id)?.reason}`
+                : ""}
+              . Inspector tracks the route live.
+            </div>
+            <TrackLiveMap
+              incident={investigation}
+              crew={assigned}
+              technicianName={assignedName ?? assigned.callsign}
+              perspective="inspector"
+            />
           </div>
         ) : investigation.status !== "flagged" ? (
           <div className="text-gold mt-2">
@@ -584,7 +607,7 @@ function DetailPane({
             recs={recs}
             assignedCrewId={investigation.assignedCrewId}
             busyCrew={busyCrew}
-            nearestLabel="Assign nearest inspector"
+            nearestLabel="Run skill + proximity engine"
             onNearest={() => assign("investigation", investigation.id)}
             onAssign={(crewId) => assign("investigation", investigation.id, crewId)}
           />
@@ -615,7 +638,7 @@ function AssignCrewList({
   return (
     <div className="mt-2 space-y-1.5">
       <div className="text-muted-foreground text-[10px] tracking-wide uppercase">
-        Assign this job — technician gets it immediately, resident tracks live
+        Engine ranking — skill first, then proximity. Override only if needed.
       </div>
       {recs.length === 0 ? (
         <p className="text-muted-foreground">No matching crew on duty.</p>
@@ -632,12 +655,10 @@ function AssignCrewList({
               onClick={() => onAssign(rec.crewId)}
             >
               <span>
-                {mine ? "Assigned · " : "Assign "}
+                {mine ? "Assigned · " : "Override · "}
                 {rec.callsign}
                 <span className="text-muted-foreground mt-0.5 block text-[10px] font-normal">
-                  {rec.technicianName} · {rec.etaMinutes} min ·{" "}
-                  {Math.round(rec.distanceM / 100) / 10} km
-                  {rec.queueSize ? ` · queue ${rec.queueSize}` : ""}
+                  {rec.reason}
                 </span>
               </span>
             </Button>

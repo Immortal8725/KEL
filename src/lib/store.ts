@@ -19,6 +19,7 @@ import {
   pickBestCrew,
   recommendCrews,
   recommendationForCrew,
+  requiredSkillsForJob,
   specializationForJob,
   type JobKind,
 } from "./engines/dispatch";
@@ -87,6 +88,7 @@ class ElectroRaidStore {
       detail: "Baseline Tshwane grid state loaded for the prototype.",
       severity: "info",
     });
+    this.autoAssignOpenJobs();
     this.bootChases();
   }
 
@@ -166,6 +168,15 @@ class ElectroRaidStore {
       entityId: result.incident.id,
     });
 
+    const current = this.incidents.find((i) => i.id === result.incident.id);
+    if (current && !current.assignedCrewId) {
+      try {
+        this.dispatch("outage", current.id, undefined, { auto: true });
+      } catch {
+        /* no matching crew on duty */
+      }
+    }
+
     return { kind: "outage" as const, ...result };
   }
 
@@ -225,6 +236,12 @@ class ElectroRaidStore {
       entityId: ticket.id,
     });
 
+    try {
+      this.dispatch("investigation", ticket.id, undefined, { auto: true });
+    } catch {
+      /* no inspector on duty */
+    }
+
     return { kind: "tip" as const, investigation: ticket, merged: false };
   }
 
@@ -277,6 +294,12 @@ class ElectroRaidStore {
         entityType: "revenue_investigation",
         entityId: ticket.id,
       });
+
+      try {
+        this.dispatch("investigation", ticket.id, undefined, { auto: true });
+      } catch {
+        /* no inspector on duty */
+      }
     }
 
     return { hits, created };
@@ -285,14 +308,27 @@ class ElectroRaidStore {
   recommend(kind: JobKind, targetId: string) {
     const target = this.jobLocation(kind, targetId);
     if (!target) return [];
-    return recommendCrews(this.crews, this.users, target.location, kind);
+    return recommendCrews(
+      this.crews,
+      this.users,
+      target.location,
+      kind,
+      8,
+      this.skillsFor(kind, targetId),
+    );
   }
 
-  dispatch(kind: JobKind, targetId: string, crewId?: string) {
+  dispatch(
+    kind: JobKind,
+    targetId: string,
+    crewId?: string,
+    opts: { auto?: boolean } = {},
+  ) {
     const target = this.jobLocation(kind, targetId);
     if (!target) throw new Error("Unknown job");
 
     const spec = specializationForJob(kind);
+    const required = this.skillsFor(kind, targetId);
     let pick: DispatchRecommendation | null = null;
     if (crewId) {
       const chosen = this.crews.find((c) => c.id === crewId);
@@ -301,9 +337,9 @@ class ElectroRaidStore {
         throw new Error("That crew cannot take this job type");
       }
       if (chosen.status === "off_duty") throw new Error("Crew is off duty");
-      pick = recommendationForCrew(chosen, this.users, target.location);
+      pick = recommendationForCrew(chosen, this.users, target.location, required);
     } else {
-      pick = pickBestCrew(this.crews, this.users, target.location, kind);
+      pick = pickBestCrew(this.crews, this.users, target.location, kind, required);
     }
 
     if (!pick) throw new Error("No available crew matches this specialisation");
@@ -326,6 +362,8 @@ class ElectroRaidStore {
     };
 
     const dispatcher = this.users.find((u) => u.role === "dispatcher")!;
+    const system = this.systemUser();
+    const actor = opts.auto ? system : dispatcher;
     const now = nowIso();
 
     if (kind === "outage") {
@@ -348,9 +386,9 @@ class ElectroRaidStore {
     }
 
     this.recordAudit({
-      actorId: dispatcher.id,
-      actorRole: "dispatcher",
-      actionType: "DISPATCHER_ASSIGNED_CREW",
+      actorId: actor.id,
+      actorRole: actor.role,
+      actionType: opts.auto ? "AUTO_ASSIGNED_CREW" : "DISPATCHER_OVERRIDE_CREW",
       entityType: kind === "outage" ? "master_incident" : "revenue_investigation",
       entityId: targetId,
       location: target.location,
@@ -363,13 +401,19 @@ class ElectroRaidStore {
         etaMinutes: pick.etaMinutes,
         score: pick.score,
         jobKind: kind,
+        reason: pick.reason,
+        matchedSkills: pick.matchedSkills,
+        missingSkills: pick.missingSkills,
+        auto: Boolean(opts.auto),
       },
     });
 
     this.emit({
       type: "dispatch.assigned",
-      title: `${pick.callsign} dispatched`,
-      detail: `${pick.technicianName} · ${pick.etaMinutes} min ETA · job assigned · resident can track live`,
+      title: opts.auto
+        ? `${pick.callsign} auto-dispatched`
+        : `${pick.callsign} dispatched`,
+      detail: `${pick.technicianName} · ${pick.reason} · live map open`,
       severity: "info",
       entityType: kind === "outage" ? "master_incident" : "revenue_investigation",
       entityId: targetId,
@@ -381,7 +425,42 @@ class ElectroRaidStore {
       callsign: pick.callsign,
     });
 
-    return { recommendation: pick, kind, targetId };
+    return { recommendation: pick, kind, targetId, auto: Boolean(opts.auto) };
+  }
+
+  autoAssignOpenJobs() {
+    for (const incident of this.incidents) {
+      if (incident.assignedCrewId) continue;
+      if (
+        incident.status === "resolved" ||
+        incident.status === "closed" ||
+        incident.status === "on_site"
+      ) {
+        continue;
+      }
+      try {
+        this.dispatch("outage", incident.id, undefined, { auto: true });
+      } catch {
+        /* no matching crew */
+      }
+    }
+    for (const inv of this.investigations) {
+      if (inv.assignedCrewId) continue;
+      if (
+        inv.status === "closed_recovered" ||
+        inv.status === "closed_no_finding" ||
+        inv.status === "on_site" ||
+        inv.status === "evidence_captured" ||
+        inv.status === "fine_issued"
+      ) {
+        continue;
+      }
+      try {
+        this.dispatch("investigation", inv.id, undefined, { auto: true });
+      } catch {
+        /* no matching crew */
+      }
+    }
   }
 
   markOnSite(kind: JobKind, targetId: string) {
@@ -765,6 +844,15 @@ class ElectroRaidStore {
     );
   }
 
+  private skillsFor(kind: JobKind, targetId: string): string[] {
+    if (kind === "outage") {
+      const incident = this.incidents.find((i) => i.id === targetId);
+      return requiredSkillsForJob("outage", incident?.classification);
+    }
+    const inv = this.investigations.find((i) => i.id === targetId);
+    return requiredSkillsForJob("investigation", inv?.type);
+  }
+
   private jobLocation(kind: JobKind, targetId: string) {
     if (kind === "outage") {
       const incident = this.incidents.find((i) => i.id === targetId);
@@ -817,18 +905,67 @@ class ElectroRaidStore {
   }
 
   private bootChases() {
+    const dest = new Map<
+      string,
+      {
+        location: GeoPoint;
+        entityType: string;
+        entityId: string;
+        callsign: string;
+        rank: number;
+      }
+    >();
+    const take = (
+      crewId: string,
+      location: GeoPoint,
+      entityType: string,
+      entityId: string,
+      callsign: string,
+      rank: number,
+    ) => {
+      const prev = dest.get(crewId);
+      if (!prev || rank > prev.rank) {
+        dest.set(crewId, { location, entityType, entityId, callsign, rank });
+      }
+    };
     for (const incident of this.incidents) {
       if (
         incident.assignedCrewId &&
         (incident.status === "en_route" || incident.status === "dispatched")
       ) {
         const crew = this.crews.find((c) => c.id === incident.assignedCrewId);
-        this.startChase(incident.assignedCrewId, incident.location, {
-          entityType: "master_incident",
-          entityId: incident.id,
-          callsign: crew?.callsign ?? "Crew",
-        });
+        take(
+          incident.assignedCrewId,
+          incident.location,
+          "master_incident",
+          incident.id,
+          crew?.callsign ?? "Crew",
+          incident.priorityScore,
+        );
       }
+    }
+    for (const inv of this.investigations) {
+      if (
+        inv.assignedCrewId &&
+        (inv.status === "en_route" || inv.status === "assigned")
+      ) {
+        const crew = this.crews.find((c) => c.id === inv.assignedCrewId);
+        take(
+          inv.assignedCrewId,
+          inv.location,
+          "revenue_investigation",
+          inv.id,
+          crew?.callsign ?? "Crew",
+          inv.anomalyRiskScore,
+        );
+      }
+    }
+    for (const [crewId, meta] of dest) {
+      this.startChase(crewId, meta.location, {
+        entityType: meta.entityType,
+        entityId: meta.entityId,
+        callsign: meta.callsign,
+      });
     }
   }
 
@@ -935,13 +1072,13 @@ class ElectroRaidStore {
   }
 }
 
-const globalForStore = globalThis as unknown as { __electroraid_v2?: ElectroRaidStore };
+const globalForStore = globalThis as unknown as { __electroraid_v3?: ElectroRaidStore };
 
 export function getStore(): ElectroRaidStore {
-  if (!globalForStore.__electroraid_v2) {
-    globalForStore.__electroraid_v2 = new ElectroRaidStore();
+  if (!globalForStore.__electroraid_v3) {
+    globalForStore.__electroraid_v3 = new ElectroRaidStore();
   }
-  return globalForStore.__electroraid_v2;
+  return globalForStore.__electroraid_v3;
 }
 
 export { hoursAgo };

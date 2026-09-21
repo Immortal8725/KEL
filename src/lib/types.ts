@@ -248,6 +248,9 @@ export interface DispatchRecommendation {
   queueSize: number;
   score: number;
   etaMinutes: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  reason: string;
 }
 
 export interface LiveEvent {

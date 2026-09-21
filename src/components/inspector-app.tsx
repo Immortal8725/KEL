@@ -9,6 +9,10 @@ import { formatZar, incidentStatusLabel } from "@/lib/format";
 import { postJson, usePlatform } from "@/lib/use-platform";
 import { useSession } from "@/lib/use-session";
 import { enqueue, flushOutbox, pendingCount } from "@/lib/offline";
+import {
+  TrackLiveMap,
+  technicianNameForCrew,
+} from "@/components/track-live-map";
 import type { MasterIncident, RevenueInvestigation } from "@/lib/types";
 
 type InspectTab = "audits" | "qa";
@@ -57,10 +61,14 @@ export function InspectorApp() {
   );
   const queue = useMemo(
     () =>
-      (snapshot?.investigations ?? []).filter(
-        (i) => i.status === "flagged" || i.status === "assigned",
-      ),
-    [snapshot],
+      (snapshot?.investigations ?? []).filter((i) => {
+        if (i.status === "closed_recovered" || i.status === "closed_no_finding") {
+          return false;
+        }
+        if (i.assignedCrewId === persona?.crewId) return true;
+        return i.status === "flagged" || i.status === "assigned";
+      }),
+    [snapshot, persona?.crewId],
   );
   const active =
     mine ??
@@ -170,7 +178,30 @@ export function InspectorApp() {
           </div>
 
           {active ? (
-            <AuditCard
+            <>
+              {crew && active.assignedCrewId === crew.id ? (
+                <div className="mt-4">
+                  <div className="border-gold/40 bg-gold/10 mb-3 rounded-xl border px-3 py-2 text-xs">
+                    <div className="font-medium text-gold">
+                      Engine assigned this audit to you
+                    </div>
+                    <div className="text-muted-foreground mt-0.5">
+                      Skill + proximity ranked {crew.callsign} first. Drive to{" "}
+                      {active.address}.
+                    </div>
+                  </div>
+                  <TrackLiveMap
+                    incident={active}
+                    crew={crew}
+                    technicianName={technicianNameForCrew(
+                      crew,
+                      snapshot?.users ?? [],
+                    )}
+                    perspective="inspector"
+                  />
+                </div>
+              ) : null}
+              <AuditCard
               inv={active}
               claimed={active.assignedCrewId === persona?.crewId}
               sealBroken={sealBroken}
@@ -205,6 +236,7 @@ export function InspectorApp() {
                 act({ action: "fine", kind: "investigation", targetId: active.id })
               }
             />
+            </>
           ) : (
             <p className="text-muted-foreground mt-4 text-xs">
               No investigation on the queue. Ask dispatch to run the anomaly scan.
