@@ -110,6 +110,11 @@
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Invert OSM tiles for a dark ops floor without a paid basemap key. */
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.95) saturate(0.35);
+}
+
 .pulse-ring {
   animation: pulse-ring 2.4s ease-out infinite;
 }
