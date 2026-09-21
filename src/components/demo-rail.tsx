@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { DEMO_SCRIPT } from "@/lib/demo";
+import { DEMO_SCRIPT } from "@/lib/demo-script";
 import { postJson } from "@/lib/use-platform";
 
 const ACTS = [
