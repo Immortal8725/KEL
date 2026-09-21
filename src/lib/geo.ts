@@ -1,0 +1,53 @@
+import type { GeoPoint } from "./types";
+
+const EARTH_RADIUS_M = 6_371_008.8;
+
+function toRad(deg: number) {
+  return (deg * Math.PI) / 180;
+}
+
+/**
+ * Haversine distance in metres — the in-memory stand-in for
+ * `ST_Distance(a::geography, b::geography)` on WGS-84.
+ */
+export function distanceMetres(a: GeoPoint, b: GeoPoint): number {
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** True when two points fall inside a geofence of `radiusM` metres. */
+export function withinMetres(a: GeoPoint, b: GeoPoint, radiusM: number): boolean {
+  return distanceMetres(a, b) <= radiusM;
+}
+
+/**
+ * Geographic centroid of a point set. Used when merging reports into a
+ * master incident so the map pin tracks the cluster, matching
+ * `ST_Centroid(ST_Collect(geom))`.
+ */
+export function centroid(points: GeoPoint[]): GeoPoint {
+  if (points.length === 0) {
+    throw new Error("centroid() requires at least one point");
+  }
+  const sum = points.reduce(
+    (acc, p) => ({ lon: acc.lon + p.lon, lat: acc.lat + p.lat }),
+    { lon: 0, lat: 0 },
+  );
+  return { lon: sum.lon / points.length, lat: sum.lat / points.length };
+}
+
+/** Drive-time estimate at 32 km/h urban average + 3 min staging. */
+export function etaMinutes(distanceM: number): number {
+  return Math.max(4, Math.round((distanceM / 1000 / 32) * 60 + 3));
+}
+
+export function formatKm(metres: number): string {
+  if (metres < 1000) return `${Math.round(metres)} m`;
+  return `${(metres / 1000).toFixed(1)} km`;
+}

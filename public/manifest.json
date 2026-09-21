@@ -1,0 +1,17 @@
+{
+  "name": "GridPulse",
+  "short_name": "GridPulse",
+  "description": "City of Tshwane smart outage and revenue protection",
+  "start_url": "/field",
+  "display": "standalone",
+  "background_color": "#071016",
+  "theme_color": "#071016",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
