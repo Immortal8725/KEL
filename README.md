@@ -16,9 +16,9 @@ Open [http://localhost:43147](http://localhost:43147) and sign in as one of the 
 | Person | Role | Lands on |
 | --- | --- | --- |
 | Sibusiso Mabena | Resident | `/resident` — report a fault, live-track the technician, confirm restore |
-| Thandiwe Nkosi | Dispatcher | `/ops` — skill + proximity auto-assigns crews; override only if needed |
-| Sipho Dlamini | Field technician | `/tech` — assigned jobs appear with a live van-to-job map |
-| Nomsa Khumalo | Revenue inspector | `/inspect` — assigned audits appear with a live map to the meter |
+| Thandiwe Nkosi | Dispatcher | `/ops` — assign a named technician; the job lands on that handset immediately |
+| Sipho Dlamini | Field technician | `/tech` — assigned jobs appear the moment control room dispatches you |
+| Nomsa Khumalo | Revenue investigator | `/inspect` — zero-kWh audits and repair QA |
 
 Use **Switch user** in the sidebar to change role.
 
@@ -69,7 +69,7 @@ Flag an **active** prepaid meter when it has purchased **0 kWh for ≥ 60 days**
 | GET | `/api/events` | Server-sent events (live map / dashboard) |
 | POST | `/api/reports` | Ingest a resident report or anonymous tip |
 | POST | `/api/anomalies/scan` | Run the zero-consumption worker |
-| POST | `/api/dispatch` | Auto-assign (omit crewId) or override a named crew |
+| POST | `/api/dispatch` | Assign a matching crew |
 | GET | `/api/audit` | Immutable ledger |
 | GET | `/api/analytics` | Municipal ROI |
 | POST | `/api/field/action` | On-site, evidence, fine, sign-off, resident confirm/dispute, inspector QA |

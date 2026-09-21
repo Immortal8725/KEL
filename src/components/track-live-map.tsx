@@ -2,10 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import type { FieldCrew, GeoPoint, User } from "@/lib/types";
+import type { FieldCrew, GeoPoint, MasterIncident, User } from "@/lib/types";
 import { distanceMetres, etaMinutes, formatKm } from "@/lib/geo";
-
-export type TrackPerspective = "resident" | "technician" | "inspector";
 
 export function TrackLiveMap({
   incident,
@@ -13,10 +11,10 @@ export function TrackLiveMap({
   technicianName,
   perspective = "resident",
 }: {
-  incident: { location: GeoPoint; address: string };
+  incident: MasterIncident;
   crew: FieldCrew;
   technicianName: string;
-  perspective?: TrackPerspective;
+  perspective?: "resident" | "technician";
 }) {
   const elRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
@@ -26,23 +24,6 @@ export function TrackLiveMap({
   const remaining = distanceMetres(crew.location, incident.location);
   const eta = etaMinutes(remaining);
   const arrived = remaining < 90 || crew.status === "on_site";
-  const field = perspective === "technician" || perspective === "inspector";
-  const pinYou = field ? "You" : "Tech";
-  const pinJob = perspective === "inspector" ? "Audit" : field ? "Job" : null;
-  const heading = field
-    ? arrived
-      ? "You are at the meter"
-      : perspective === "inspector"
-        ? "Route to the audit"
-        : "Route to the job"
-    : arrived
-      ? "Crew at the meter"
-      : "Live crew tracking";
-  const navigateLabel = arrived
-    ? "Open pin in Maps"
-    : perspective === "inspector"
-      ? "Navigate to this audit"
-      : "Navigate to this job";
 
   const signature = useMemo(
     () =>
@@ -118,22 +99,19 @@ export function TrackLiveMap({
 
       const houseIcon = L.divIcon({
         className: "",
-        html: pinJob
-          ? `<div style="display:flex;flex-direction:column;align-items:center">
+        html:
+          perspective === "technician"
+            ? `<div style="display:flex;flex-direction:column;align-items:center">
           <div style="width:18px;height:18px;border-radius:4px;background:#e24b4b;border:2px solid #fff;box-shadow:0 0 10px #e24b4b"></div>
-          <div style="margin-top:3px;font:11px/1 ui-sans-serif;color:#fff;background:#e24b4b;padding:2px 6px;border-radius:99px;font-weight:700;white-space:nowrap">${pinJob}</div>
+          <div style="margin-top:3px;font:11px/1 ui-sans-serif;color:#fff;background:#e24b4b;padding:2px 6px;border-radius:99px;font-weight:700;white-space:nowrap">Job</div>
         </div>`
-          : `<div style="width:18px;height:18px;border-radius:4px;background:#e24b4b;border:2px solid #fff;box-shadow:0 0 10px #e24b4b"></div>`,
-        iconSize: pinJob ? [72, 36] : [18, 18],
-        iconAnchor: pinJob ? [36, 10] : [9, 9],
+            : `<div style="width:18px;height:18px;border-radius:4px;background:#e24b4b;border:2px solid #fff;box-shadow:0 0 10px #e24b4b"></div>`,
+        iconSize: perspective === "technician" ? [72, 36] : [18, 18],
+        iconAnchor: perspective === "technician" ? [36, 10] : [9, 9],
       });
       group.addLayer(
         L.marker(house, { icon: houseIcon }).bindTooltip(
-          pinJob === "Audit"
-            ? "Audit destination"
-            : pinJob
-              ? "Job destination"
-              : "Your house / meter",
+          perspective === "technician" ? "Job destination" : "Your house / meter",
         ),
       );
 
@@ -141,14 +119,18 @@ export function TrackLiveMap({
         className: "",
         html: `<div style="display:flex;flex-direction:column;align-items:center">
           <div style="width:16px;height:16px;border-radius:99px;background:#5ec8ff;border:2px solid #fff;box-shadow:0 0 14px #5ec8ff"></div>
-          <div style="margin-top:3px;font:11px/1 ui-sans-serif;color:#071016;background:#5ec8ff;padding:2px 6px;border-radius:99px;font-weight:700;white-space:nowrap">${pinYou}</div>
+          <div style="margin-top:3px;font:11px/1 ui-sans-serif;color:#071016;background:#5ec8ff;padding:2px 6px;border-radius:99px;font-weight:700;white-space:nowrap">${
+            perspective === "technician" ? "You" : "Tech"
+          }</div>
         </div>`,
         iconSize: [72, 36],
         iconAnchor: [36, 10],
       });
       group.addLayer(
         L.marker(van, { icon: vanIcon }).bindTooltip(
-          field ? `You · ${crew.callsign}` : `${technicianName} · ${crew.callsign}`,
+          perspective === "technician"
+            ? `You · ${crew.callsign}`
+            : `${technicianName} · ${crew.callsign}`,
         ),
       );
 
@@ -165,9 +147,6 @@ export function TrackLiveMap({
     technicianName,
     ready,
     perspective,
-    pinJob,
-    pinYou,
-    field,
   ]);
 
   const maps = navigateUrl(crew.location, incident.location);
@@ -182,13 +161,21 @@ export function TrackLiveMap({
       <div className="bg-card flex items-start justify-between gap-3 px-3 py-2">
         <div>
           <div className="text-[10px] tracking-wide text-primary uppercase">
-            {heading}
+            {perspective === "technician"
+              ? arrived
+                ? "You are at the meter"
+                : "Route to the job"
+              : arrived
+                ? "Technician at your meter"
+                : "Live technician tracking"}
           </div>
           <div className="text-sm font-medium">
-            {field ? incident.address : `${technicianName} · ${crew.callsign}`}
+            {perspective === "technician"
+              ? incident.address
+              : `${technicianName} · ${crew.callsign}`}
           </div>
           <div className="text-muted-foreground text-xs">
-            {field
+            {perspective === "technician"
               ? `${crew.callsign} · ${crew.vehicleReg}`
               : `${crew.vehicleReg} · ${crew.status.replaceAll("_", " ")}`}
           </div>
@@ -202,14 +189,14 @@ export function TrackLiveMap({
           </div>
         </div>
       </div>
-      {field ? (
+      {perspective === "technician" ? (
         <a
           href={maps}
           target="_blank"
           rel="noreferrer"
           className="bg-primary text-primary-foreground block px-3 py-2.5 text-center text-sm font-medium"
         >
-          {navigateLabel}
+          {arrived ? "Open job pin in Maps" : "Navigate to this job"}
         </a>
       ) : null}
     </div>

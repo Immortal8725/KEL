@@ -38,8 +38,8 @@ export const PERSONAS: DemoPersona[] = [
     email: "t.nkosi@tshwane.gov.za",
     home: "/ops",
     blurb:
-      "Open tickets auto-assign by skill then proximity. Watch the live map and override a van only if the engine is wrong.",
-    duties: ["Auto-dispatch", "Live map", "Override"],
+      "Assign a named technician to the resident’s ticket. The job lands on that handset immediately and the household tracks the van live.",
+    duties: ["Assign technician", "Live map", "Work queue"],
   },
   {
     id: "usr_sipho",
@@ -50,8 +50,8 @@ export const PERSONAS: DemoPersona[] = [
     home: "/tech",
     crewId: "crew_mt_mamelodi",
     blurb:
-      "The engine assigns you by skill and proximity. Follow the van-to-job map, log on site, and sign off.",
-    duties: ["Assigned jobs", "Live map", "Sign off"],
+      "The moment control room assigns your crew, the job appears here and the resident tracks your GPS.",
+    duties: ["Assigned jobs", "On site", "Sign off"],
   },
   {
     id: "usr_nomsa",
@@ -62,8 +62,8 @@ export const PERSONAS: DemoPersona[] = [
     home: "/inspect",
     crewId: "crew_rp_east",
     blurb:
-      "Skill + proximity puts audits on your kit with a live map to the meter. Photograph the tamper, issue the fine, and score technician repairs.",
-    duties: ["Live map", "Izinyoka", "Repair QA"],
+      "Zero-kWh audits, seal checks, digital tamper fines, and quality-assurance scores on what the technician repaired.",
+    duties: ["Meter audit", "Izinyoka", "Repair QA"],
   },
 ];
 

@@ -14,9 +14,7 @@ export async function POST(request: Request) {
     if (!body.kind || !body.targetId) {
       return fail("kind and targetId are required.");
     }
-    const result = getStore().dispatch(body.kind, body.targetId, body.crewId, {
-      auto: !body.crewId,
-    });
+    const result = getStore().dispatch(body.kind, body.targetId, body.crewId);
     return json({ ok: true, ...result });
   } catch (error) {
     return fail(error instanceof Error ? error.message : "Dispatch failed", 500);

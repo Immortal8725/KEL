@@ -367,23 +367,20 @@ $$;
 
 -- -----------------------------------------------------------------------------
 -- Constraint-based dispatch: nearest available crew of the required
--- Ranking (lowest score wins):
---   score = missing_required_skills * 120 + distance_km * 12 + queue * 10
--- Skill is the first gate; proximity then queue break remaining ties.
+-- specialisation, penalised by current queue size.
+--   score = distance_km * 12 + queue * 18
 -- Equivalent TypeScript: src/lib/engines/dispatch.ts
 -- -----------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION recommend_crew(
   p_lon             DOUBLE PRECISION,
   p_lat             DOUBLE PRECISION,
-  p_specialization  specialization,
-  p_required_skills TEXT[] DEFAULT '{}'
+  p_specialization  specialization
 ) RETURNS TABLE (
   crew_id     UUID,
   callsign    TEXT,
   distance_m  DOUBLE PRECISION,
   queue_size  INTEGER,
-  skill_miss  INTEGER,
   score       NUMERIC
 )
 LANGUAGE sql
@@ -398,25 +395,15 @@ AS $$
     ) AS distance_m,
     fc.active_queue_size,
     (
-      SELECT COUNT(*)::INTEGER
-      FROM unnest(p_required_skills) AS req(skill)
-      WHERE NOT req.skill = ANY (fc.skill_certifications)
-    ) AS skill_miss,
-    (
-      (
-        SELECT COUNT(*)
-        FROM unnest(p_required_skills) AS req(skill)
-        WHERE NOT req.skill = ANY (fc.skill_certifications)
-      ) * 120
-      + (ST_Distance(
+      (ST_Distance(
         fc.location,
         ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography
       ) / 1000.0) * 12
-      + (fc.active_queue_size * 10)
+      + (fc.active_queue_size * 18)
     )::NUMERIC AS score
   FROM field_crews fc
   WHERE fc.specialization = p_specialization
-    AND fc.status IN ('available', 'en_route', 'on_site')
+    AND fc.status IN ('available', 'en_route')
   ORDER BY score ASC, distance_m ASC
   LIMIT 5;
 $$;
