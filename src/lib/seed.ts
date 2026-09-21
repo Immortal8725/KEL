@@ -41,6 +41,16 @@ export function seedPlatform(): PlatformSnapshot {
       createdAt: daysAgo(400, T0),
     },
     {
+      id: "usr_sibusiso",
+      employeeNo: null,
+      fullName: "Sibusiso Mabena",
+      email: "sibusiso@resident.tshwane",
+      phone: "+27 82 441 0190",
+      role: "resident",
+      isActive: true,
+      createdAt: daysAgo(40, T0),
+    },
+    {
       id: "usr_thandiwe",
       employeeNo: "COT-4412",
       fullName: "Thandiwe Nkosi",

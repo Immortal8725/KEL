@@ -13,6 +13,8 @@ export async function POST(request: Request) {
       notes?: string;
       caption?: string;
       dataUri?: string;
+      serialNumber?: string;
+      actorId?: string;
     };
 
     const store = getStore();
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
           caption: body.caption ?? "Field photo",
           dataUri: body.dataUri ?? "",
           capturedAt: new Date().toISOString(),
-          capturedBy: "usr_nomsa",
+          capturedBy: body.actorId ?? "usr_nomsa",
         });
         break;
       }
@@ -37,7 +39,10 @@ export async function POST(request: Request) {
         store.closeInvestigation(body.targetId, "closed_recovered");
         break;
       case "complete":
-        store.completeOutage(body.targetId, body.notes ?? "Work completed.");
+        store.completeOutage(body.targetId, body.notes ?? "Work completed.", {
+          serialNumber: body.serialNumber,
+          actorId: body.actorId,
+        });
         break;
       case "close":
         store.closeInvestigation(body.targetId, "closed_no_finding");

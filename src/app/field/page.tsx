@@ -1,10 +1,5 @@
-import { AppShell } from "@/components/app-shell";
-import { FieldApp } from "@/components/field-app";
+import { redirect } from "next/navigation";
 
-export default function FieldPage() {
-  return (
-    <AppShell>
-      <FieldApp />
-    </AppShell>
-  );
+export default function FieldRedirect() {
+  redirect("/tech");
 }

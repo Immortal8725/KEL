@@ -1,10 +1,5 @@
-import { AppShell } from "@/components/app-shell";
-import { ReportForm } from "@/components/report-form";
+import { redirect } from "next/navigation";
 
-export default function ReportPage() {
-  return (
-    <AppShell>
-      <ReportForm />
-    </AppShell>
-  );
+export default function ReportRedirect() {
+  redirect("/resident");
 }

@@ -1,10 +1,5 @@
-import { AppShell } from "@/components/app-shell";
-import { CommandCenter } from "@/components/command-center";
+import { HomeRedirect } from "@/components/home-redirect";
 
 export default function HomePage() {
-  return (
-    <AppShell>
-      <CommandCenter />
-    </AppShell>
-  );
+  return <HomeRedirect />;
 }

@@ -11,12 +11,16 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:43147](http://localhost:43147). Use **Hackathon demo → Play all 4 acts** on the command centre (or `/demo`) to walk the judges through:
+Open [http://localhost:43147](http://localhost:43147). You land on a **fake login**. Password for every demo account is `gridpulse`, or tap a persona card:
 
-1. Three Mamelodi reports inside 500 m collapsing into one master ticket
-2. Zero-consumption scan on an ENERGIZED feeder opening an Izinyoka investigation
-3. Inspector on-site photos and a tamper fine hashed into the audit log
-4. Executive ROI board with recovered revenue in ZAR
+| Persona | Role | Lands on |
+| --- | --- | --- |
+| Sibusiso Mabena | Resident | `/resident` — outage report, anonymous Izinyoka tip, WhatsApp-style ETA |
+| Thandiwe Nkosi | Dispatcher | `/ops` — live map, clustered tickets, **Play all 4 acts**, ROI |
+| Sipho Dlamini | Field technician | `/tech` — En Route / On Site / Resolved, serial + signature |
+| Nomsa Khumalo | Revenue investigator | `/inspect` — zero-kWh audits, seal check, digital fine |
+
+Use **Switch user** in the sidebar to hop personas without a real IdP.
 
 ## What is running
 
@@ -46,8 +50,12 @@ Flag an **active** prepaid meter when it has purchased **0 kWh for ≥ 60 days**
 
 ## Roles
 
-- **Maintenance technicians** — cable / transformer / equipment faults
-- **Revenue protection inspectors** — zero-consumption houses and anonymous Izinyoka tips
+| User | Interface | Responsibility |
+| --- | --- | --- |
+| Resident | `/resident` PWA / WhatsApp-style | Report outages, anonymous tips, track repair ETA |
+| Dispatcher | `/ops` admin portal | Heatmap, deduplicated master tickets, vending anomalies, assign crews |
+| Field technician | `/tech` PWA | Physical repairs, live GPS status, closure proof (notes, serial, signature) |
+| Revenue investigator | `/inspect` audit PWA | Zero-consumption audits, Izinyoka evidence, digital tamper fines |
 - Dispatch picks the nearest available unit of the right specialisation, penalised by current queue size
 
 ## Field PWA

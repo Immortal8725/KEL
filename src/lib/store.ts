@@ -493,7 +493,11 @@ class GridPulseStore {
     return this.investigations[idx];
   }
 
-  completeOutage(incidentId: string, notes: string) {
+  completeOutage(
+    incidentId: string,
+    notes: string,
+    extras?: { serialNumber?: string; actorId?: string },
+  ) {
     const idx = this.incidents.findIndex((i) => i.id === incidentId);
     if (idx < 0) throw new Error("Unknown incident");
     const now = nowIso();
@@ -516,7 +520,9 @@ class GridPulseStore {
       }
     }
 
-    const tech = this.users.find((u) => u.role === "technician")!;
+    const tech =
+      this.users.find((u) => u.id === extras?.actorId) ??
+      this.users.find((u) => u.role === "technician")!;
     this.recordAudit({
       actorId: tech.id,
       actorRole: "technician",
@@ -528,6 +534,7 @@ class GridPulseStore {
         reference: incident.reference,
         notes,
         component: "11kV cable joint replaced",
+        serialNumber: extras?.serialNumber ?? null,
       },
     });
 
